@@ -2,7 +2,7 @@
 
 ## 🏗️ Phase 0: 환경 설정 및 아키텍처 (시스템 기지 구축)
 - [x] **Next.js 프로젝트 초기화**: App Router, Tailwind, TypeScript 프리미엄 가동 중 **(완료)**
-- [ ] **Supabase 연동**: Auth, Database, Storage(미디어 저장) 초기 설정
+- [x] **Supabase 연동**: 전 세계 매장의 심장이 될 데이터베이스 연결 성공 **(완료)**
 - [ ] **Vercel 자동 배포**: CI/CD 파이프라인 (Git-Vercel) 구축
 - [ ] **Multi-tenant DB 설계**: 수천 개 매장의 독립 데이터 공간 확보 (Row Level Security 적용)
 - [ ] **비용 모니터링 세팅**: 서비스별 할당량 및 비용 알림 설정 (Cost Guard)
