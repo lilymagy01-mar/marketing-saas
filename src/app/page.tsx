@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, BarChart3, Rocket, Sparkles, Zap } from "lucide-react";
 
@@ -19,9 +20,11 @@ export default function Home() {
             <a href="#vision" className="transition-colors hover:text-rose-500">Vision</a>
             <a href="#features" className="transition-colors hover:text-rose-500">System</a>
             <a href="#global" className="transition-colors hover:text-rose-500">Global</a>
-            <button className="rounded-full bg-rose-500 px-5 py-2.5 text-white shadow-md transition-all hover:bg-rose-600 active:scale-95">
-              Launch Engine
-            </button>
+            <Link href="/login">
+              <button className="rounded-full bg-rose-500 px-5 py-2.5 text-white shadow-md transition-all hover:bg-rose-600 active:scale-95">
+                Launch Engine
+              </button>
+            </Link>
           </div>
         </div>
       </nav>
@@ -50,13 +53,17 @@ export default function Home() {
               AI가 영상을 만들고, 수치가 증명하며, 결제가 자동으로 이어지는 '더 시스템'의 시작.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row">
-              <button className="group flex items-center justify-center gap-2 rounded-full bg-[#1A1A1A] px-8 py-4 text-lg font-bold text-white transition-all hover:bg-black hover:shadow-xl dark:bg-white dark:text-black">
-                엔진 가동하기
-                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </button>
-              <button className="flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white px-8 py-4 text-lg font-bold transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800">
-                기능 살펴보기
-              </button>
+              <Link href="/login">
+                <button className="group flex items-center justify-center gap-2 rounded-full bg-[#1A1A1A] px-8 py-4 text-lg font-bold text-white transition-all hover:bg-black hover:shadow-xl dark:bg-white dark:text-black w-full sm:w-auto">
+                  엔진 가동하기
+                  <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </button>
+              </Link>
+              <Link href="/dashboard/shop">
+                <button className="flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white px-8 py-4 text-lg font-bold transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800 w-full sm:w-auto">
+                  기능 살펴보기
+                </button>
+              </Link>
             </div>
           </div>
 

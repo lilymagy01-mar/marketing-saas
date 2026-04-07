@@ -1,0 +1,86 @@
+{
+  "name": "LilyMag_Universal_SaaS_Foundry_v4",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marketing-trigger",
+        "options": {}
+      },
+      "id": "webhook-master",
+      "name": "SaaS_Global_Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "master-webhook-id"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://YOUR_SUPABASE_URL/rest/v1/user_credentials?user_id=eq.{{$json.body.user_id}}",
+        "authentication": "headerAuth",
+        "headers": {
+          "parameters": [
+            { "name": "apikey", "value": "YOUR_SUPABASE_ANON_KEY" },
+            { "name": "Authorization", "value": "Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "db-lookup",
+      "name": "Supabase_Vault_Lookup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 다중 사용자 열쇠 매칭 로직\nconst payload = items[0].json.body;\nconst credentials = items[0].json.data[0]; // DB에서 가져온 개별 사장님의 열쇠\n\nreturn [{\n  json: {\n    ...payload,\n    user_credentials: credentials, // 각 SNS용 개별 토큰(열쇠)\n    processed_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "logic-engine",
+      "name": "SaaS_Logic_Engine",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://graph.instagram.com/v1.0/...", "headers": { "parameters": [ { "name": "Authorization", "value": "=Bearer {{$json.user_credentials.instagram_token}}" } ] } },
+      "id": "insta-saas", "name": "Instagram_SaaS", "type": "n8n-nodes-base.httpRequest", "typeVersion": 1, "position": [650, 50]
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://api.pinterest.com/v5/pins", "headers": { "parameters": [ { "name": "Authorization", "value": "=Bearer {{$json.user_credentials.pinterest_token}}" } ] } },
+      "id": "pin-saas", "name": "Pinterest_SaaS", "type": "n8n-nodes-base.httpRequest", "typeVersion": 1, "position": [650, 200]
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://www.googleapis.com/youtube/v3/videos", "headers": { "parameters": [ { "name": "Authorization", "value": "=Bearer {{$json.user_credentials.youtube_token}}" } ] } },
+      "id": "yt-saas", "name": "YouTube_SaaS", "type": "n8n-nodes-base.httpRequest", "typeVersion": 1, "position": [650, 350]
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://graph.facebook.com/v1.0/...", "headers": { "parameters": [ { "name": "Authorization", "value": "=Bearer {{$json.user_credentials.facebook_token}}" } ] } },
+      "id": "fb-saas", "name": "Facebook_SaaS", "type": "n8n-nodes-base.httpRequest", "typeVersion": 1, "position": [650, 500]
+    }
+  ],
+  "connections": {
+    "SaaS_Global_Webhook": { "main": [ [ { "node": "Supabase_Vault_Lookup", "type": "main", "index": 0 } ] ] },
+    "Supabase_Vault_Lookup": { "main": [ [ { "node": "SaaS_Logic_Engine", "type": "main", "index": 0 } ] ] },
+    "SaaS_Logic_Engine": {
+      "main": [
+        [
+          { "node": "Instagram_SaaS", "type": "main", "index": 0 },
+          { "node": "Pinterest_SaaS", "type": "main", "index": 0 },
+          { "node": "YouTube_SaaS", "type": "main", "index": 0 },
+          { "node": "Facebook_SaaS", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}
