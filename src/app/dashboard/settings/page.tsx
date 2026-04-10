@@ -115,13 +115,32 @@ export default function SettingsPage() {
     }
 
     try {
-      console.log("Sending Payload to n8n:", {
+      const payload = {
         user_id: "LILYMAG_GLOBAL_CMD_1",
         tokens: settings.tokens,
         shopName: settings.shopName,
-        test_mode: true
+        test_mode: true,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log("Sending Payload to n8n:", payload);
+      
+      const response = await fetch(settings.webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
       });
+      
+      if (!response.ok) throw new Error(`n8n 연결 실패 (Status: ${response.status})`);
+      
+      // n8n responds depending on how Respond node is configured
+      const resultStr = await response.text();
+      let result = resultStr;
+      try { result = JSON.parse(resultStr); } catch (e) {}
+
+      alert(`n8n 전송 완료! ✅\n\nn8n 화면에서 웹훅 노드의 수신 데이터를 확인해보세요.\n응답: ${typeof result === 'object' ? JSON.stringify(result) : result}`);
     } catch (err) {
+      alert(`n8n 전송 실패 ❌\n\n주소가 정확한지, n8n 워크플로우가 활성화(Active) 상태거나 수신 대기 상태인지 확인해주세요.\n\n상세 에러: ${err}`);
       console.error(err);
     }
   };
@@ -138,6 +157,14 @@ export default function SettingsPage() {
       guide: "📍 [페이스북 페이지 무력화 가이드]\n\n1. 본인의 페이스북 페이지 접속\n2. 왼쪽 메뉴 [설정] -> [새 페이지 환경] 클릭\n3. [고급 메시징] 또는 [Meta Business Suite] 접속\n4. '영구 페이지 액세스 토큰' 발급을 위해 위 인스타그램 가이드의 8번 이후 과정을 페이스북 페이지 권한으로 진행\n5. 'manage_pages' 권한이 포함된 토큰을 복사하여 붙여넣으세요."
     },
     { 
+      id: 'naver', name: 'Naver Blog', icon: Briefcase, color: "text-green-600", bg: "bg-green-600/10", placeholder: "NAVER_Access_Token_...",
+      guide: "📍 [네이버 블로그 통합 가이드]\n\n1. developers.naver.com 접속 후 로그인\n2. 상단 메뉴 [Application] -> [애플리케이션 등록] 클릭\n3. **[애플리케이션 이름]**에 매장 이름을 입력\n4. [사용 API]에 '네이버 오픈API' / '블로그 글쓰기' 권한 추가\n5. 로그인 오픈 API 서비스 환경 칸에 Callback URL을 http://localhost:3000/api/auth/callback/naver 입력\n6. 등록 후 발급된 토큰을 복사하여 입력하세요."
+    },
+    { 
+      id: 'youtube', name: 'YouTube', icon: Play, color: "text-red-500", bg: "bg-red-500/10", placeholder: "YT_OAuth_Secret_...",
+      guide: "📍 [유튜브 영상 사격 가이드]\n\n1. console.cloud.google.com 접속\n2. 상단 파란색 바 옆의 드롭다운 클릭 -> [새 프로젝트]\n3. **[프로젝트 이름]**에 사장님 매장 이름 등을 입력 후 생성\n4. 왼쪽 상단 메뉴 [API 및 서비스] -> [라이브러리] 클릭\n5. 'YouTube Data API v3' 검색 후 [사용] 클릭\n6. [관리] -> [사용자 인증 정보] -> [+ 사용자 인증 정보 만들기] -> [API 키] 클릭\n7. 발급된 API 키를 복사하여 붙여넣으세요."
+    },
+    { 
       id: 'pinterest', name: 'Pinterest', icon: Layers, color: "text-red-600", bg: "bg-red-600/10", placeholder: "PIN_Access_Token_...",
       guide: "📍 [핀터레스트 시각 전략 가이드]\n\n1. pinterest.com/developers 접속 후 로그인\n2. 상단 [My Apps] 클릭 후 [Create New App] 클릭\n3. **[Name]** 칸에 사장님 매장 이름 등을 영문으로 입력하고 [Create]\n4. App ID와 App Secret이 나오면 하단의 [V5 Access Token] 영역 확인\n5. 'boards:read', 'pins:write' 권한을 체크하고 [Generate Token] 클릭\n6. 생성된 토큰을 복사하여 붙여넣으세요."
     },
@@ -148,10 +175,6 @@ export default function SettingsPage() {
     { 
       id: 'linkedin', name: 'LinkedIn', icon: Globe, color: "text-blue-700", bg: "bg-blue-700/10", placeholder: "LNKD_Access_Token_...",
       guide: "📍 [링크드인 신뢰 전략 가이드]\n\n1. linkedin.com/developers 접속 후 [Create app] 버튼 클릭\n2. **[App Name]**에 매장 이름을 영문으로 입력하고 회사 페이지와 연동\n3. [Product] 탭 클릭 후 [Share on LinkedIn] 기능을 승인받기\n4. [Auth] 탭에서 'OAuth 2.0 scopes'에 'w_member_social'이 있는지 확인\n5. 발급된 토큰을 복사하여 입력하세요."
-    },
-    { 
-      id: 'youtube', name: 'YouTube', icon: Play, color: "text-red-500", bg: "bg-red-500/10", placeholder: "YT_OAuth_Secret_...",
-      guide: "📍 [유튜브 영상 사격 가이드]\n\n1. console.cloud.google.com 접속\n2. 상단 파란색 바 옆의 드롭다운 클릭 -> [새 프로젝트]\n3. **[프로젝트 이름]**에 사장님 매장 이름 등을 입력 후 생성\n4. 왼쪽 상단 메뉴 [API 및 서비스] -> [라이브러리] 클릭\n5. 'YouTube Data API v3' 검색 후 [사용] 클릭\n6. [관리] -> [사용자 인증 정보] -> [+ 사용자 인증 정보 만들기] -> [API 키] 클릭\n7. 발급된 API 키를 복사하여 붙여넣으세요."
     },
     { 
       id: 'tiktok', name: 'TikTok', icon: Video, color: "text-zinc-900 dark:text-zinc-100", bg: "bg-zinc-900/10 dark:bg-white/10", placeholder: "TT_Client_Key_...",

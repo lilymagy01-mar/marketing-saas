@@ -13,6 +13,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 
 const Button = ({ children, className, onClick, disabled, variant = "primary" }: any) => {
   const baseStyle = "flex items-center justify-center transition-all active:scale-95 disabled:opacity-50";
@@ -32,20 +33,80 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState(1); // 1: Login, 2: Identity Setup
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [step, setStep] = useState(1); // 1: Auth, 2: Identity Setup
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate Login Handshake
-    setTimeout(() => {
+    
+    try {
+      const password = (e.target as any).querySelector('input[type="password"]').value;
+      
+      if (isSignUp) {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password
+        });
+        if (error) throw error;
+        alert("회원가입이 완료되었습니다! 로그인을 시도해 주세요.");
+        setIsSignUp(false);
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        if (error) throw error;
+
+        // Check if user already has a display_name (onboarding done)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', (data.user as any).id)
+          .single();
+
+        if (profile?.display_name) {
+          router.push("/dashboard");
+          return;
+        }
+        
+        setStep(2);
+      }
+
       setIsLoading(false);
-      setStep(2);
-    }, 1500);
+    } catch (err: any) {
+      alert(`오류 발생: ${err.message}`);
+      setIsLoading(false);
+    }
   };
 
-  const handleStartJourney = () => {
-    // Navigate to Dashboard after identity is confirmed
+  const handleOAuthSignIn = async (provider: 'github' | 'google') => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`
+      }
+    });
+
+    if (error) {
+      alert(`${provider} 로그인 오류: ${error.message}`);
+    }
+  };
+
+  const handleStartJourney = async () => {
+    const shopNameInput = document.querySelector('input[placeholder="e.g. Blossom Paris Central"]') as HTMLInputElement;
+    const shopName = shopNameInput?.value || 'LilyMag Shop';
+
+    setIsLoading(true);
+    // Save shop name to database
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ display_name: shopName })
+        .eq('id', user.id);
+    }
+
     router.push("/dashboard");
   };
 
@@ -109,10 +170,19 @@ export default function LoginPage() {
                   {isLoading ? (
                     <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                   ) : (
-                    <>Initialize Portal <ArrowRight className="ml-2 w-4 h-4" /></>
+                    <>{isSignUp ? 'Create Account' : 'Initialize Portal'} <ArrowRight className="ml-2 w-4 h-4" /></>
                   )}
                 </Button>
               </form>
+
+              <div className="text-center">
+                <button 
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 hover:text-rose-500 transition-colors"
+                >
+                  {isSignUp ? "Already have an account? Login" : "No account? Create Enterprise Identity"}
+                </button>
+              </div>
 
               <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center">
@@ -124,10 +194,18 @@ export default function LoginPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" className="py-6 rounded-2xl font-bold text-[10px] uppercase">
+                <Button 
+                  variant="outline" 
+                  className="py-6 rounded-2xl font-bold text-[10px] uppercase"
+                  onClick={() => handleOAuthSignIn('google')}
+                >
                    Google
                 </Button>
-                <Button variant="outline" className="py-6 rounded-2xl font-bold text-[10px] uppercase">
+                <Button 
+                  variant="outline" 
+                  className="py-6 rounded-2xl font-bold text-[10px] uppercase"
+                  onClick={() => handleOAuthSignIn('github')}
+                >
                    Github
                 </Button>
               </div>

@@ -2,9 +2,9 @@
 
 import { cn } from "@/lib/utils";
 import { HTMLAttributes, forwardRef } from "react";
-import { motion } from "framer-motion";
+import { HTMLMotionProps, motion } from "framer-motion";
 
-const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
+const Card = forwardRef<HTMLDivElement, HTMLMotionProps<"div">>(
   ({ className, ...props }, ref) => (
     <motion.div
       ref={ref}

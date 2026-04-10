@@ -10,14 +10,12 @@ import {
   Zap,
   ShieldCheck,
   Link2,
-  Instagram,
   Camera,
   Map,
   Clock,
-  LayoutDashboard,
   Aperture
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 

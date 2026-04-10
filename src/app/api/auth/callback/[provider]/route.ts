@@ -19,14 +19,38 @@ export async function GET(
     return NextResponse.json({ error: '인증 코드가 없습니다.' }, { status: 400 });
   }
 
-  // TODO: 여기서 code를 가지고 각 빅테크 서버(Meta, Google, Naver)에 요청하여 
-  // 진짜 '액세스 토큰(Access Token)'으로 교환해야 합니다.
-  
-  // TODO: 교환받은 액세스 토큰을 Supabase의 'sns_vault' 테이블에 저장해야 합니다.
+  // 2. 인증 코드를 실제 액세스 토큰으로 교환! (Token Exchange)
+  let accessToken = '';
 
-  console.log(`[LilyMag Global Auth] ${provider} 플랫폼으로부터 1차 인증 코드 획득 완료:`, code);
+  try {
+    if (provider === 'instagram') {
+      const clientId = process.env.NEXT_PUBLIC_META_APP_ID || "1834771173855867";
+      const clientSecret = process.env.META_APP_SECRET;
+      // 주의: redirect_uri는 connect 단계에서 보낸 것과 100% 일치해야 함!
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const redirectUri = `${baseUrl}/api/auth/callback/${provider}`;
 
-  // 일단 임시로 성공 처리하고 설정 페이지로 강제 귀환! (임시 Token 표시)
-  // 실제 프로덕션에서는 토큰을 암호화하여 DB에 넣고, url 쿼리에 토큰을 노출하지 않아야 함.
-  return NextResponse.redirect(new URL(`/dashboard/settings?success=${provider}&tempCode=${code}`, request.url));
+      const response = await fetch(
+        `https://graph.facebook.com/v19.0/oauth/access_token?client_id=${clientId}&redirect_uri=${redirectUri}&client_secret=${clientSecret}&code=${code}`
+      );
+      const data = await response.json();
+      
+      if (data.error) {
+        console.error('[Meta Auth Error]', data.error);
+        return NextResponse.redirect(new URL(`/dashboard/settings?error=${data.error.message}`, request.url));
+      }
+
+      accessToken = data.access_token;
+    }
+    // TODO: Google, Naver 토큰 교환 로직도 차례로 추가 예정!
+  } catch (err) {
+    console.error(`[${provider} Exchange Error]`, err);
+    return NextResponse.redirect(new URL(`/dashboard/settings?error=exchange_failed`, request.url));
+  }
+
+  // 3. (TODO) Supabase DB에 토큰 저장
+  // 일단 임시로 성공 처리하고 설정 페이지로 강제 귀환!
+  console.log(`[LilyMag Global Auth] ${provider} 플랫폼으로부터 최종 토큰 획득 성공:`, accessToken?.substring(0, 10) + '...');
+
+  return NextResponse.redirect(new URL(`/dashboard/settings?success=${provider}&token=${accessToken}`, request.url));
 }

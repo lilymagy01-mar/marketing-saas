@@ -2,7 +2,8 @@
 
 import { ReactNode, useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { 
   LayoutDashboard, 
   Store, 
@@ -27,22 +28,52 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [role, setRole] = useState<string>('user');
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push("/login");
+      } else {
+        setUser(session.user);
+        // Fetch role from profiles table
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        
+        // Bring back standard Supabase connection
+        if (profile && profile.role) {
+          console.log("Fetched Role from DB:", profile.role);
+          setRole(profile.role);
+        } else {
+          console.log("No profile found - setting default user role");
+          setRole('user');
+        }
+      }
+    };
+    checkAuth();
+
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [router]);
 
-  const menuItems = [
+  const allItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
     { icon: Store, label: "Shop Profile", href: "/dashboard/shop" },
     { icon: Video, label: "AI Shorts", href: "/dashboard/shorts" },
     { icon: FileText, label: "Blog Engine", href: "/dashboard/blog" },
     { icon: Hash, label: "Threads Bot", href: "/dashboard/threads" },
-    { icon: Settings, label: "System Config", href: "/dashboard/settings" },
+    { icon: Settings, label: "System Config", href: "/dashboard/settings", adminOnly: true },
   ];
+
+  const menuItems = allItems.filter(item => !item.adminOnly || role === 'admin');
 
   return (
     <div className="flex h-screen bg-[#fafafa] dark:bg-[#050505] text-zinc-900 dark:text-zinc-100 overflow-hidden font-sans">
@@ -127,10 +158,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </div>
           
-          <button className={cn(
-            "flex items-center gap-4 px-5 py-4 w-full rounded-2xl text-zinc-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all",
-            !isSidebarOpen && "justify-center px-0 h-14"
-          )}>
+          <button 
+            onClick={async () => {
+              await supabase.auth.signOut();
+              router.push("/login");
+            }}
+            className={cn(
+              "flex items-center gap-4 px-5 py-4 w-full rounded-2xl text-zinc-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all",
+              !isSidebarOpen && "justify-center px-0 h-14"
+            )}
+          >
             <LogOut className="w-5 h-5" />
             {isSidebarOpen && <span className="font-bold text-sm">Logout</span>}
           </button>
@@ -179,10 +216,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               className="flex items-center gap-4 p-1.5 pl-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-sm cursor-pointer"
             >
                <div className="flex flex-col items-end">
-                 <span className="text-xs font-black tracking-tight">Lily Mag Admin</span>
-                 <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Master</span>
+                 <span className="text-xs font-black tracking-tight">{user?.email?.split('@')[0] || 'User'}</span>
+                 <span className={cn(
+                   "text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md",
+                   role === 'admin' ? "bg-rose-500 text-white" : "text-zinc-400 border border-zinc-200"
+                 )}>
+                   {role}
+                 </span>
                </div>
-               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-amber-400 shadow-lg shadow-rose-500/20 flex items-center justify-center text-white font-black">LM</div>
+               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-amber-400 shadow-lg shadow-rose-500/20 flex items-center justify-center text-white font-black uppercase">
+                 {user?.email?.charAt(0) || 'U'}
+               </div>
             </motion.div>
           </div>
         </header>
