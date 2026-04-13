@@ -62,9 +62,15 @@ const COUNTRY_PERSONAS: Record<CountryCode, Persona> = {
   }
 };
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "mock-key",
-});
+let _openai: OpenAI | null = null;
+function getOpenAI() {
+  if (!_openai) {
+    _openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY || "mock-key",
+    });
+  }
+  return _openai;
+}
 
 export async function generateShortsScenario(
   prompt: string, 
@@ -149,6 +155,7 @@ export async function generateShortsScenario(
   }
   Do not include markdown blocks, just raw JSON.`;
 
+  const openai = getOpenAI();
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
@@ -208,6 +215,7 @@ export async function generateMarketingCopy(
 
   const finalSystemPrompt = systemPrompt + `\nOutput JSON format: { "title": string, "hook": string, "value": string, "cta": string }`;
 
+  const openai = getOpenAI();
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
