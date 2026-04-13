@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { 
   TrendingUp, 
   Users, 
@@ -10,25 +11,122 @@ import {
   Video, 
   FileText, 
   Hash,
-  ChevronRight
+  ChevronRight,
+  Loader2,
+  AlertCircle,
+  Activity
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { supabase } from "@/lib/supabase";
+import Link from "next/link";
+import { AgentThoughtConsole } from "@/components/dashboard/agent-thought-console";
+import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
-  const stats = [
-    { label: "Total Reach", value: "1.2M", change: "+12.5%", icon: Users, color: "from-rose-500 to-rose-600" },
-    { label: "AI Generated", value: "842", change: "+42%", icon: Sparkles, color: "from-amber-400 to-amber-600" },
-    { label: "Conversion Rate", value: "4.8%", change: "+1.2%", icon: TrendingUp, color: "from-indigo-500 to-indigo-600" },
-    { label: "Autopilot Saved", value: "128h", change: "+12h", icon: Zap, color: "from-emerald-500 to-emerald-600" },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState([
+    { label: "총 도달수", value: "1.2M", change: "+0%", icon: Users, color: "from-rose-500 to-rose-600" },
+    { label: "AI 생성 콘텐츠", value: "0", change: "New", icon: Sparkles, color: "from-amber-400 to-amber-600" },
+    { label: "전환율", value: "4.8%", change: "+0%", icon: TrendingUp, color: "from-indigo-500 to-indigo-600" },
+    { label: "자율 주행 모드", value: "OFF", change: "-", icon: Zap, color: "from-emerald-500 to-emerald-600" },
+  ]);
+
+  const [recentCampaigns, setRecentCampaigns] = useState<any[]>([]);
+  const [isTesting, setIsTesting] = useState(false);
+  const [role, setRole] = useState<string>('user');
+
+  async function fetchDashboardData() {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    // Role Fetch
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    
+    const currentRole = profile?.role || 'user';
+    setRole(currentRole);
+
+    if (currentRole === 'admin') {
+      // ADMIN METRICS
+      setStats([
+        { label: "플랫폼 총 매출", value: "₩12.8M", change: "+12.5%", icon: TrendingUp, color: "from-indigo-600 to-violet-600" },
+        { label: "활성 구독 매장", value: "42", change: "+4개", icon: Users, color: "from-blue-500 to-indigo-600" },
+        { label: "AI 누적 생성량", value: "8.4k", change: "+148", icon: Sparkles, color: "from-amber-400 to-amber-600" },
+        { label: "시스템 인프라", value: "Optimal", change: "99.9%", icon: Activity, color: "from-emerald-500 to-teal-600" },
+      ]);
+      setLoading(false);
+      return;
+    }
+
+    // USER METRICS (Existing logic)
+    const { count: campaignCount } = await supabase
+      .from('campaigns')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+
+    const { data: shopSettings } = await supabase
+      .from('shop_settings')
+      .select('auto_pilot_enabled')
+      .eq('user_id', user.id)
+      .single();
+
+    const { data: campaigns } = await supabase
+      .from('campaigns')
+      .select('*, campaign_contents(*)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(3);
+
+    setStats([
+      { label: "총 도달수", value: "1.2M", change: "+12.5%", icon: Users, color: "from-rose-500 to-rose-600" },
+      { label: "AI 생성 콘텐츠", value: (campaignCount || 0).toString(), change: "+42%", icon: Sparkles, color: "from-amber-400 to-amber-600" },
+      { label: "전환율", value: "4.8%", change: "+1.2%", icon: TrendingUp, color: "from-indigo-500 to-indigo-600" },
+      { label: "자율 주행 모드", value: shopSettings?.auto_pilot_enabled ? "가동중" : "중지됨", change: "시스템 정상", icon: Zap, color: "from-emerald-500 to-emerald-600" },
+    ]);
+
+    if (campaigns) setRecentCampaigns(campaigns);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const handleLaunchTest = async () => {
+    setIsTesting(true);
+    try {
+      await fetch('/api/automation/cron');
+      setTimeout(fetchDashboardData, 3000);
+    } catch (error) {
+      console.error("Test Launch Failed:", error);
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   const quickActions = [
-    { title: "Generate Shorts", description: "Convert photos to viral video", icon: Video, color: "bg-rose-500", href: "/dashboard/shorts" },
-    { title: "AI Blog Post", description: "Write authority content", icon: FileText, color: "bg-indigo-500", href: "/dashboard/blog" },
-    { title: "Threads Viral", description: "Engage with local audience", icon: Hash, color: "bg-amber-400", href: "/dashboard/threads" },
+    { title: "쇼츠 시나리오 생성", description: "사진 한 장으로 바이럴 영상 기획", icon: Video, color: "bg-rose-500", href: "/dashboard/shorts" },
+    { title: "AI 블로그 포스팅", description: "권위 있는 전문 콘텐츠 자동 작성", icon: FileText, color: "bg-indigo-500", href: "/dashboard/blog" },
+    { title: "스레드 바이럴 팩", description: "지역 고객과 실시간 소통 강화", icon: Hash, color: "bg-amber-400", href: "/dashboard/threads" },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-12 h-12 text-rose-500 animate-spin" />
+        <p className="text-sm font-black uppercase tracking-widest text-zinc-500">통합 사령부 동기화 중...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-12">
@@ -38,17 +136,27 @@ export default function DashboardPage() {
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50"
+            className={cn(
+              "inline-flex items-center gap-2 px-4 py-2 rounded-full border",
+              role === 'admin' 
+                ? "bg-indigo-50 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/50" 
+                : "bg-rose-50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/50"
+            )}
           >
-            <Sparkles className="w-4 h-4 text-rose-500" />
-            <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest leading-none">AI Marketing Engine Active</span>
+            {role === 'admin' ? <Activity className="w-4 h-4 text-indigo-500" /> : <Sparkles className="w-4 h-4 text-rose-500" />}
+            <span className={cn(
+              "text-[10px] font-black uppercase tracking-widest leading-none",
+              role === 'admin' ? "text-indigo-500" : "text-rose-500"
+            )}>
+              {role === 'admin' ? "플랫폼 전체 인프라 정상" : "AI 마케팅 엔진 가동 중"}
+            </span>
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-6xl font-black tracking-tighter uppercase italic leading-[0.9]"
+            className="text-6xl font-black tracking-tighter uppercase italic leading-[0.9] text-zinc-900 dark:text-white"
           >
-            Command Center
+            {role === 'admin' ? "운영 통합 사령부" : "중앙 사령부"}
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -56,22 +164,52 @@ export default function DashboardPage() {
             transition={{ delay: 0.2 }}
             className="text-zinc-500 font-medium max-w-xl text-lg leading-relaxed"
           >
-            "물리적 한계를 초월하여, 잠자는 동안에도 가동되는 24/7 마케팅 로봇 시스템을 관리합니다."
+            {role === 'admin' 
+              ? "\"플랫폼 전체의 수익 모델과 글로벌 인프라 가동 상태를 실시간으로 통제하고 확장합니다.\""
+              : "\"물리적 한계를 초월하여, 잠자는 동안에도 가동되는 24/7 마케팅 로봇 시스템을 관리합니다.\""}
           </motion.p>
         </div>
         
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="lg">Generate Report</Button>
-          <Button variant="primary" size="lg">
-            <Sparkles className="w-5 h-5 mr-3 shrink-0" /> Launch Campaign
-          </Button>
+          {role === 'admin' ? (
+            <>
+              <Link href="/admin/users">
+                <Button variant="outline" size="lg" className="border-indigo-200 dark:border-indigo-800 font-bold uppercase tracking-widest text-[10px]">
+                  구독 매장 심층 분석
+                </Button>
+              </Link>
+              <Link href="/admin/settings">
+                 <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white font-black italic shadow-xl shadow-indigo-600/20">
+                  <Zap className="w-5 h-5 mr-3 shrink-0" /> 인프라 자가 진단
+                </Button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={handleLaunchTest} 
+                disabled={isTesting}
+                className="border-zinc-200 dark:border-zinc-800 font-bold uppercase tracking-widest text-[10px]"
+              >
+                {isTesting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Zap className="w-4 h-4 mr-2 text-amber-500" />}
+                테스트 작전 개시
+              </Button>
+              <Link href="/dashboard/shorts">
+                <Button size="lg" className="bg-rose-500 hover:bg-rose-600 text-white font-black italic shadow-xl shadow-rose-500/20">
+                  <Sparkles className="w-5 h-5 mr-3 shrink-0" /> 신규 캠페인 런칭
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
-          <Card key={stat.label} className="group hover:border-rose-500/20 transition-all duration-500 relative overflow-hidden">
+        {stats.map((stat) => (
+          <Card key={stat.label} className="p-6 group hover:border-rose-500/20 transition-all duration-500 relative overflow-hidden bg-white dark:bg-zinc-950 border-none shadow-xl rounded-[32px]">
             <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.color} opacity-5 blur-3xl group-hover:opacity-10 transition-opacity`} />
             <div className="space-y-3 relative z-10">
               <div className="flex items-center justify-between">
@@ -84,7 +222,7 @@ export default function DashboardPage() {
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{stat.label}</p>
-                <h3 className="text-4xl font-black tracking-tighter">{stat.value}</h3>
+                <h3 className="text-4xl font-black tracking-tighter text-zinc-900 dark:text-white">{stat.value}</h3>
               </div>
             </div>
           </Card>
@@ -92,144 +230,130 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content Area */}
+        {/* Main Content Area: Recent Campaigns */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Main Chart Area Mock */}
-          <Card className="min-h-[400px] flex flex-col items-center justify-center border-dashed group relative overflow-hidden">
-             <div className="p-6 bg-zinc-50 dark:bg-zinc-900 rounded-3xl mb-4 group-hover:scale-110 transition-transform duration-500 shadow-inner">
-               <TrendingUp className="w-12 h-12 text-zinc-300 dark:text-zinc-700" />
-             </div>
-             <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs">Real-time Performance Chart Coming Soon</p>
-             <p className="text-zinc-500 text-[10px] mt-2 uppercase tracking-tighter">Connecting to Meta Reach API...</p>
-          </Card>
-
-          {/* Autopilot Reactor Card - Tactical Mode Selection */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-10 rounded-[48px] bg-gradient-to-br from-zinc-900 via-black to-zinc-900 border border-white/10 relative overflow-hidden group shadow-2xl shadow-cyan-500/10"
-          >
-            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform duration-1000">
-              <Zap className="w-56 h-56 text-cyan-500" />
-            </div>
-            
-            <div className="relative z-10 space-y-10">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30">
-                      <Zap className="w-6 h-6 text-cyan-400" />
+          <h3 className="text-3xl font-black italic uppercase tracking-tighter flex items-center gap-4 text-zinc-900 dark:text-white">
+             <TrendingUp className="w-8 h-8 text-indigo-500" /> 최근 배포된 전략 리포트
+          </h3>
+          
+          {recentCampaigns.length === 0 ? (
+            <Card className="min-h-[400px] flex flex-col items-center justify-center border-dashed border-2 border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 rounded-[40px] p-12 text-center">
+              <div className="p-8 bg-white dark:bg-zinc-900 rounded-[40px] mb-6 shadow-xl ring-1 ring-zinc-100 dark:ring-zinc-800">
+                <AlertCircle className="w-16 h-16 text-zinc-300 dark:text-zinc-700" />
+              </div>
+              <h4 className="text-2xl font-black uppercase italic tracking-tighter mb-2">활성화된 임무 없음</h4>
+              <p className="text-zinc-500 text-sm max-w-xs mx-auto mb-8 font-medium">
+                아직 생성된 캠페인이 없습니다. 첫 번째 AI 마켓팅 작전을 개시하십시오.
+              </p>
+              <Link href="/dashboard/shorts">
+                <Button className="px-12 py-6 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-black uppercase tracking-widest text-[10px]">초기 작전 기획</Button>
+              </Link>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {recentCampaigns.map((camp) => (
+                <Card key={camp.id} className="p-8 bg-gradient-to-br from-zinc-900 to-black text-white rounded-[40px] overflow-hidden relative group border-none">
+                  <div className="relative z-10 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="inline-flex items-center gap-3 px-3 py-1 bg-white/10 rounded-full border border-white/5">
+                        <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-cyan-400">{camp.status === 'scheduled' ? '전송 대기중' : camp.status}</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                        {new Date(camp.created_at).toLocaleDateString()}
+                      </span>
                     </div>
-                    <div>
-                      <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Tactical Reactor</h3>
-                      <p className="text-cyan-400/60 text-[10px] font-black uppercase tracking-widest leading-none mt-1">Operational Mode Engine v4.0</p>
+
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">캠페인 인텔리전스</p>
+                        <h4 className="text-3xl font-black tracking-tighter uppercase italic leading-none group-hover:text-cyan-400 transition-colors">
+                          "{camp.title}"
+                        </h4>
+                      </div>
+                      
+                      <div className="flex items-center gap-6">
+                         <div className="space-y-2">
+                           <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">콘텐츠 유형</p>
+                           <span className="px-3 py-1 bg-zinc-800 rounded-lg text-[9px] font-black text-zinc-300 uppercase italic tracking-tighter">
+                             {camp.type === 'shorts' ? '바이럴 영상' : camp.type === 'blog' ? 'SEO 블로그' : '소셜 포스트'}
+                           </span>
+                         </div>
+                         <div className="space-y-2">
+                           <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">타겟 리전</p>
+                           <span className="px-3 py-1 bg-zinc-800 rounded-lg text-[9px] font-black text-zinc-300 uppercase italic tracking-tighter">
+                             {camp.country === 'KR' ? '대한민국(KR)' : camp.country === 'CN' ? '중국(CN)' : camp.country === 'US' ? '미국(US)' : '일본(JP)'}
+                           </span>
+                         </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-white/5 flex items-center justify-between">
+                      <p className="text-[10px] font-medium text-zinc-500 italic">
+                        {camp.status === 'published' ? "작전 전개 완료 (글로벌)." : "최종 명령 대기 / 자동 배포 준비 완료."}
+                      </p>
+                      <Button className="bg-white text-black font-black px-8 rounded-2xl hover:scale-105 transition-all text-[10px] uppercase tracking-widest">
+                        리포트 확인
+                      </Button>
                     </div>
                   </div>
-                </div>
-                
-                <div className="flex items-center gap-2 p-1.5 bg-white/5 rounded-2xl border border-white/10">
-                  {['Full', 'Hybrid', 'Manual'].map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => alert(`${mode} 모드로 전환되었습니다.`)}
-                      className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-tighter transition-all duration-300 ${
-                        mode === 'Hybrid' 
-                        ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/40' 
-                        : 'text-zinc-500 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      {mode === 'Full' ? '전체 자율' : mode === 'Hybrid' ? '부분 자율' : '커스텀'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 rounded-3xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-colors group/item">
-                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Today's Subject</p>
-                  <p className="text-xl font-black text-white tracking-tighter uppercase italic leading-none group-hover:text-cyan-400 transition-colors">"벚꽃 이후의 무대, 튤립의 시간"</p>
-                  <div className="mt-4 flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                    <p className="text-[10px] font-bold text-cyan-400/80 uppercase">AI Optimized Target</p>
-                  </div>
-                </div>
-
-                <div className="p-6 rounded-3xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-colors">
-                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Platform Mix</p>
-                  <div className="flex flex-wrap gap-2">
-                    {['Shorts', 'Threads', 'Blog'].map(tag => (
-                      <span key={tag} className="px-3 py-1 bg-zinc-800 rounded-lg text-[9px] font-black text-zinc-300 uppercase italic tracking-tighter">{tag}</span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="p-6 rounded-3xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-colors">
-                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">Execution Logic</p>
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold text-zinc-300 uppercase italic">Prime Time: AM 10:00</p>
-                    <p className="text-[10px] font-medium text-zinc-500 italic">승인 대기 중: 사령관님의 최종 승인이 필요합니다.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                   <div className="flex -space-x-2">
-                     {[1,2,3].map(i => (
-                       <div key={i} className="w-8 h-8 rounded-full bg-zinc-800 border-2 border-black flex items-center justify-center text-[10px] font-black text-zinc-500">
-                         {i === 1 ? 'IG' : i === 2 ? 'TH' : 'YT'}
-                       </div>
-                     ))}
-                   </div>
-                   <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">3 Platforms Armed & Ready</p>
-                </div>
-                <Button variant="primary" className="bg-cyan-500 hover:bg-cyan-400 text-black font-black px-10 rounded-2xl shadow-xl shadow-cyan-500/20">
-                  승인 및 사격 개시
-                </Button>
-              </div>
+                </Card>
+              ))}
             </div>
-          </motion.div>
+          )}
         </div>
 
-        {/* Quick Actions Panel */}
-        <div className="space-y-6">
-          <h3 className="text-xl font-black italic uppercase tracking-tighter flex items-center gap-3">
-             <ArrowUpRight className="w-6 h-6 text-rose-500" /> Instant Actions
+        {/* Quick Actions Panel & Agent Console */}
+        <div className="space-y-8 flex flex-col">
+          <h3 className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3 text-zinc-900 dark:text-white">
+             <ArrowUpRight className="w-6 h-6 text-rose-500" /> 작전 전개 구역
           </h3>
+          
           <div className="space-y-4">
-            {quickActions.map((action, i) => (
-              <motion.div 
-                key={action.title}
-                whileHover={{ x: 10, scale: 1.02 }}
-                className="group relative flex items-center gap-5 p-6 bg-white dark:bg-zinc-950 rounded-[32px] border border-zinc-100 dark:border-zinc-900 shadow-sm hover:shadow-2xl hover:shadow-rose-500/10 cursor-pointer transition-all duration-300"
-              >
-                 <div className={`p-4 rounded-2xl ${action.color} text-white shadow-xl shadow-${action.color}/20 group-hover:rotate-12 transition-transform`}>
-                   <action.icon className="w-6 h-6" />
-                 </div>
-                 <div className="flex-1">
-                   <h4 className="font-bold text-lg tracking-tight uppercase italic">{action.title}</h4>
-                   <p className="text-xs font-medium text-zinc-400">{action.description}</p>
-                 </div>
-                 <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-rose-500 transition-colors" />
-              </motion.div>
+            {quickActions.map((action) => (
+              <Link key={action.title} href={action.href}>
+                <motion.div 
+                  whileHover={{ x: 10, scale: 1.02 }}
+                  className="group relative flex items-center gap-5 p-6 bg-white dark:bg-zinc-950 rounded-[32px] border border-zinc-100 dark:border-zinc-900 shadow-sm hover:shadow-2xl hover:shadow-rose-500/10 cursor-pointer transition-all duration-300"
+                >
+                   <div className={`p-4 rounded-2xl ${action.color} text-white shadow-xl shadow-${action.color}/20 group-hover:rotate-12 transition-transform`}>
+                     <action.icon className="w-6 h-6" />
+                   </div>
+                   <div className="flex-1">
+                     <h4 className="font-bold text-lg tracking-tight uppercase italic text-zinc-900 dark:text-white">{action.title}</h4>
+                     <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{action.description}</p>
+                   </div>
+                   <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-rose-500 transition-colors" />
+                </motion.div>
+              </Link>
             ))}
           </div>
 
-          <Card className="bg-gradient-to-br from-zinc-900 to-black text-white p-8 overflow-hidden relative group">
+          <div className="flex-1 min-h-[400px]">
+            <h3 className="text-xl font-black italic uppercase tracking-tighter flex items-center gap-3 text-zinc-900 dark:text-white mb-4">
+              <Activity className="w-5 h-5 text-emerald-500" /> 코어 신경망 로그 (Cortex)
+            </h3>
+            <AgentThoughtConsole />
+          </div>
+
+          <Card className="bg-gradient-to-br from-indigo-900 to-purple-950 text-white p-8 overflow-hidden relative group border-none rounded-[40px] shadow-2xl">
              <div className="relative z-10 space-y-6">
-                <div className="p-3 bg-white/10 rounded-2xl w-fit">
-                  <Sparkles className="w-6 h-6 text-amber-400" />
+                <div className="flex items-center justify-between">
+                  <div className="p-3 bg-white/10 rounded-2xl w-fit">
+                    <Sparkles className="w-6 h-6 text-amber-400" />
+                  </div>
+                  <div className="px-3 py-1 bg-emerald-500 text-black text-[8px] font-black uppercase rounded-full">Pro Advisor</div>
                 </div>
-                <div className="space-y-2">
-                   <h4 className="text-2xl font-black tracking-tighter uppercase italic">Weekly Strategy</h4>
-                   <p className="text-zinc-400 text-xs font-semibold leading-relaxed">
-                     "이번 주는 '졸업식' 시즌 키워드에 130% 집중하세요. AI가 최적화 시나리오를 구성했습니다."
+                <div className="space-y-3">
+                   <h4 className="text-2xl font-black tracking-tighter uppercase italic leading-none">주간 통찰 리포트</h4>
+                   <p className="text-zinc-300 text-xs font-bold leading-relaxed">
+                     "이번 주는 '졸업식' 시즌 키워드에 130% 집중하세요. AI가 당신만의 스위트 스팟을 찾아냈습니다."
                    </p>
                 </div>
-                <Button variant="glass" className="w-full">Activate Strategy</Button>
+                <Button variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white hover:text-indigo-950 font-black uppercase text-[10px] tracking-widest rounded-2xl py-6">전략 활성화</Button>
              </div>
-             <div className="absolute bottom-0 right-0 p-4 opacity-5 group-hover:scale-150 transition-transform duration-1000">
-               <TrendingUp className="w-48 h-48" />
+             <div className="absolute -bottom-10 -right-10 p-4 opacity-10 group-hover:scale-150 transition-transform duration-1000">
+               <TrendingUp className="w-64 h-64" />
              </div>
           </Card>
         </div>

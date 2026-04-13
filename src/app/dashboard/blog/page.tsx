@@ -38,6 +38,7 @@ export default function BlogPage() {
     try {
       const response = await fetch("/api/generate/copy", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: topic, type: "blog", country }),
       });
       const data = await response.json();
@@ -57,6 +58,7 @@ export default function BlogPage() {
       const platform = country === 'CN' ? 'XiaoHongShu (Red)' : 'Naver/Google Blog';
       const response = await fetch("/api/automation/publish", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           platform, 
           country, 
@@ -82,11 +84,11 @@ export default function BlogPage() {
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/50 w-fit text-amber-600">
           <BookOpen className="w-4 h-4" />
           <span className="text-[10px] font-black uppercase tracking-widest leading-none">
-            {country === 'CN' ? "XiaoHongShu Catalyst v2.1" : "SEO Blog Alchemist v2.1"}
+            {country === 'CN' ? "샤오홍슈 카탈리스트 v2.1" : "SEO 블로그 연금술사 v2.1"}
           </span>
         </div>
         <h1 className="text-6xl font-black tracking-tighter uppercase italic leading-[0.9]">
-           {country === 'CN' ? "XiaoHongShu Alchemist" : "AI Blog Alchemy"}
+           {country === 'CN' ? "샤오홍슈 연금술" : "AI 블로그 연금술"}
         </h1>
         <p className="text-zinc-500 font-medium max-w-xl text-lg leading-relaxed">
            "사장님의 키워드 한 줄로 검색 순위 1위를 선점하는 최고급 마케팅 서사를 집필합니다."
@@ -102,7 +104,7 @@ export default function BlogPage() {
         <Card className="lg:col-span-1 p-8 bg-zinc-950 text-white border-none rounded-[40px] shadow-2xl relative overflow-hidden group">
           <div className="relative z-10 space-y-8">
             <div className="space-y-4">
-              <h3 className="text-2xl font-black italic uppercase tracking-tighter">Target Synthesis</h3>
+              <h3 className="text-2xl font-black italic uppercase tracking-tighter">타겟 시나리오 합성</h3>
               <p className="text-zinc-400 text-xs font-bold leading-relaxed uppercase tracking-widest">
                 AI에게 블로그의 핵심 주제나 키워드를 알려주세요.
               </p>
@@ -122,11 +124,11 @@ export default function BlogPage() {
               >
                 {isGenerating ? (
                    <span className="flex items-center gap-2">
-                     <RotateCcw className="w-5 h-5 animate-spin" /> SYNTHESIZING...
+                     <RotateCcw className="w-5 h-5 animate-spin" /> 연금술 가동 중...
                    </span>
                 ) : (
                    <span className="flex items-center gap-2">
-                     <Zap className="w-5 h-5 fill-white" /> START AI SYNTHESIS
+                     <Zap className="w-5 h-5 fill-white" /> AI 블로그 합성 시작
                    </span>
                 )}
               </Button>
@@ -134,15 +136,15 @@ export default function BlogPage() {
 
             <div className="pt-8 border-t border-zinc-800 flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Neural Mode</p>
+                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">뉴럴 모드</p>
                 <div className="flex items-center gap-2">
                   <Globe className="w-4 h-4 text-green-400" />
-                  <span className="text-xs font-bold">SEO Optimizer Active</span>
+                  <span className="text-xs font-bold">SEO 최적화 활성</span>
                 </div>
               </div>
               <div className="space-y-1 text-right">
-                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Target Platform</p>
-                <span className="text-xs font-bold">{country === 'CN' ? "XiaoHongShu (Red)" : "Naver / Google"}</span>
+                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">대상 플랫폼</p>
+                <span className="text-xs font-bold">{country === 'CN' ? "샤오홍슈 (Red)" : "네이버 / 구글"}</span>
               </div>
             </div>
           </div>
@@ -165,9 +167,9 @@ export default function BlogPage() {
                     <Search className="w-16 h-16 text-zinc-300 mx-auto" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-zinc-400">Waiting for Synthesis</h3>
+                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-zinc-400">합성 대기 중</h3>
                     <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest leading-relaxed max-w-xs mx-auto">
-                      "명품 블로그의 서사가 이곳에서 시작됩니다. 동력을 주입해 주세요."
+                      "명품 블로그의 서사가 이곳에서 시작됩니다. 키워드를 주입해 주세요."
                     </p>
                   </div>
                </motion.div>
@@ -182,7 +184,7 @@ export default function BlogPage() {
                     <Sparkles className="w-16 h-16 text-amber-500" />
                   </div>
                   <div className="space-y-3 relative z-10">
-                    <h3 className="text-2xl font-black uppercase italic tracking-tighter">AI Alchemist at Work</h3>
+                    <h3 className="text-2xl font-black uppercase italic tracking-tighter">AI 연금술사 작업 중</h3>
                     <div className="flex gap-2 justify-center">
                        {[0,1,2].map(i => (
                          <motion.div 
@@ -206,11 +208,11 @@ export default function BlogPage() {
                     <div className="relative z-10 space-y-10">
                        <div className="flex items-center justify-between">
                          <div className="px-4 py-1.5 bg-green-500 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg shadow-green-500/20">
-                            SEO Optimized Content
+                            SEO 최적화 완료된 콘텐츠
                          </div>
                          <div className="flex gap-2">
                            <Button variant="outline" size="sm" className="rounded-full h-10 px-4">
-                             <Copy className="w-4 h-4 mr-2" /> Copy All
+                             <Copy className="w-4 h-4 mr-2" /> 전체 복사
                            </Button>
                            <Button 
                              variant="primary" 
@@ -220,7 +222,7 @@ export default function BlogPage() {
                              disabled={isPublishing}
                            >
                              <Share2 className={cn("w-4 h-4 mr-2", isPublishing && "animate-spin")} /> 
-                             {isPublishing ? "PUBLISHING..." : "Publish"}
+                             {isPublishing ? "배포 중..." : "지금 배포하기"}
                            </Button>
                          </div>
                        </div>
@@ -264,11 +266,11 @@ export default function BlogPage() {
                           <div className="p-3 bg-amber-500 text-white rounded-xl shadow-lg shadow-amber-500/20">
                              <TrendingUp className="w-5 h-5" />
                           </div>
-                          <h4 className="font-black text-xl italic uppercase italic tracking-tighter">Reach Prediction</h4>
+                          <h4 className="font-black text-xl italic uppercase italic tracking-tighter">도달 범위 예측</h4>
                        </div>
                        <div className="space-y-4">
                           <div className="flex justify-between items-end">
-                             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Est. Reach Boost</p>
+                             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">예상 도달률 상승</p>
                              <p className="text-4xl font-black text-amber-500 italic uppercase italic tracking-tighter">+130%</p>
                           </div>
                           <div className="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
@@ -286,7 +288,7 @@ export default function BlogPage() {
                           <div className="p-3 bg-green-500 text-white rounded-xl shadow-lg shadow-green-500/20">
                              <Target className="w-5 h-5" />
                           </div>
-                          <h4 className="font-black text-xl italic uppercase italic tracking-tighter">SEO Score</h4>
+                          <h4 className="font-black text-xl italic uppercase italic tracking-tighter">SEO 점수</h4>
                        </div>
                        <div className="flex items-center gap-6">
                           <div className="relative w-20 h-20">
@@ -297,8 +299,8 @@ export default function BlogPage() {
                              <div className="absolute inset-0 flex items-center justify-center font-black text-lg">94</div>
                           </div>
                           <div className="space-y-1">
-                             <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Near Perfect Strategy</p>
-                             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Search Engine Ready</p>
+                             <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">완벽에 가까운 전략</p>
+                             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">검색 엔진 색인 준비 완료</p>
                           </div>
                        </div>
                     </Card>

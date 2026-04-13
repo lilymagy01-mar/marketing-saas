@@ -1,6 +1,6 @@
 {
-  "name": "tmp-app",
-  "version": "0.1.0",
+  "name": "lilymag-marketing-saas",
+  "version": "4.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

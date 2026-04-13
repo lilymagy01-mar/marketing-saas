@@ -35,9 +35,9 @@ export default function ShortsPage() {
   const [isPublishing, setIsPublishing] = useState(false);
 
   const steps = [
-    { id: 1, label: "Asset Intake", icon: Upload },
-    { id: 2, label: "Neural Selection", icon: Star },
-    { id: 3, label: "Final Synthesis", icon: Sparkles }
+    { id: 1, label: "에셋 입력", icon: Upload },
+    { id: 2, label: "뉴럴 선택", icon: Star },
+    { id: 3, label: "최종 합성", icon: Sparkles }
   ];
 
   const handleGenerate = async () => {
@@ -45,6 +45,7 @@ export default function ShortsPage() {
     try {
       const response = await fetch("/api/generate/shorts", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           prompt: prompt || "A beautiful flower bouquet for a graduation ceremony.",
           country 
@@ -70,6 +71,7 @@ export default function ShortsPage() {
       const platform = country === 'CN' ? 'Douyin' : 'YouTube Shorts';
       const response = await fetch("/api/automation/publish", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           platform, 
           country, 
@@ -94,16 +96,16 @@ export default function ShortsPage() {
       <div className="flex flex-col gap-4">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 w-fit text-rose-500">
           <Video className="w-4 h-4" />
-          <span className="text-[10px] font-black uppercase tracking-widest leading-none">AI Video Engine v4.0 Active</span>
+          <span className="text-[10px] font-black uppercase tracking-widest leading-none">AI 비디오 엔진 v4.0 가동 중</span>
         </div>
         <h1 className="text-6xl font-black tracking-tighter uppercase italic leading-[0.9]">
-           {country === 'CN' ? "Douyin Viral Synth" : "AI Shorts Synth"}
+           {country === 'CN' ? "도우인 바이럴 합성" : "AI 쇼츠 합성 엔진"}
         </h1>
         <p className="text-zinc-500 font-medium max-w-xl text-lg leading-relaxed">
            "단 한 장의 꽃 사진으로, 수만 명의 시선을 사로잡는 하이엔드 바이럴 영상을 창조합니다."
         </p>
         <div className="mt-4 flex items-center gap-4">
-           <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Target Strategy</span>
+           <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">타겟 전략 리전</span>
            <CountrySelector selected={country} onSelect={setCountry} />
         </div>
       </div>
@@ -146,9 +148,9 @@ export default function ShortsPage() {
                 <Upload className="w-16 h-16 text-rose-500 animate-bounce" />
               </div>
               <div className="text-center mt-8 space-y-3 px-8">
-                <h3 className="text-2xl font-black tracking-tight uppercase italic">{country === 'CN' ? "Upload Master for Douyin" : "Upload Master Image"}</h3>
+                <h3 className="text-2xl font-black tracking-tight uppercase italic">{country === 'CN' ? "도우인용 마스터 업로드" : "마스터 이미지 업로드"}</h3>
                 <p className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">
-                   {country === 'CN' ? "AI will analyze Douyin trends and hot audio waves." : "AI will analyze colors, emotions, and trends."}
+                   {country === 'CN' ? "AI가 도우인 트렌드와 인기 음원 파동을 분석합니다." : "AI가 색상, 감정, 트렌드를 정밀 분석합니다."}
                 </p>
                 <div className="mt-6 w-full max-w-xs mx-auto">
                     <input 
@@ -160,7 +162,7 @@ export default function ShortsPage() {
                 </div>
               </div>
               <Button onClick={() => setStep(2)} variant="primary" size="lg" className="mt-8 rounded-2xl">
-                  Analyze & Proceed
+                  분석 및 진행하기
               </Button>
             </Card>
 
@@ -170,7 +172,7 @@ export default function ShortsPage() {
                     <div className="p-3 bg-rose-500 text-white rounded-xl shadow-lg shadow-rose-500/20">
                       <Star className="w-5 h-5" />
                     </div>
-                    <h3 className="font-black text-xl uppercase italic tracking-tighter">AI Analysis Insights</h3>
+                    <h3 className="font-black text-xl uppercase italic tracking-tighter">AI 분석 통찰 (Insights)</h3>
                   </div>
                   <p className="text-zinc-600 dark:text-zinc-400 font-medium text-sm leading-relaxed">
                      "현재 시스템은 '로즈 골드' 톤과 '자연광'이 포함된 이미지를 선호합니다. 이 이미지를 사용하면 도달률이 142% 상승할 것으로 예측됩니다."
@@ -179,7 +181,7 @@ export default function ShortsPage() {
                <div className="p-10 bg-zinc-900 text-white rounded-[40px] shadow-2xl relative overflow-hidden group">
                   <div className="relative z-10 space-y-6">
                     <Zap className="w-12 h-12 text-amber-400 fill-amber-400" />
-                    <h3 className="text-3xl font-black italic uppercase italic tracking-tighter">Instant Autopilot</h3>
+                    <h3 className="text-3xl font-black italic uppercase italic tracking-tighter">자동 주행 모드</h3>
                     <p className="text-zinc-400 text-xs font-bold leading-relaxed italic italic tracking-tighter">"130% 스위트 스팟 알고리즘 가동 중."</p>
                   </div>
                   <div className="absolute top-0 right-0 p-4 opacity-5">
@@ -204,8 +206,8 @@ export default function ShortsPage() {
                    <div className="aspect-[9/16] bg-zinc-200 dark:bg-zinc-900 group-hover:scale-110 transition-transform duration-[2000ms] relative">
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                       <div className="absolute bottom-8 left-8 right-8 space-y-3">
-                         <div className="px-4 py-1.5 bg-rose-500 text-white text-[10px] font-black w-fit rounded-full uppercase tracking-widest shadow-xl">Template 0{i}</div>
-                         <h4 className="text-white text-xl font-bold italic uppercase tracking-tighter">Urban Flora v4</h4>
+                         <div className="px-4 py-1.5 bg-rose-500 text-white text-[10px] font-black w-fit rounded-full uppercase tracking-widest shadow-xl">템플릿 0{i}</div>
+                         <h4 className="text-white text-xl font-bold italic uppercase tracking-tighter">어반 플로라 v4</h4>
                       </div>
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                          <div className="w-20 h-20 bg-white/20 backdrop-blur-xl border border-white/30 rounded-full flex items-center justify-center shadow-2xl">
@@ -217,10 +219,10 @@ export default function ShortsPage() {
               ))}
             </div>
             <div className="flex justify-between items-center bg-white dark:bg-zinc-950 p-8 rounded-[40px] border border-zinc-100 dark:border-zinc-900 shadow-2xl">
-              <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">Select a neural template to continue synthesis</span>
+              <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">지능형 합성을 계속하려면 뉴럴 템플릿을 선택하세요</span>
               <div className="flex gap-4">
-                 <Button variant="outline" onClick={() => setStep(1)} size="lg">Back</Button>
-                 <Button variant="primary" onClick={() => setStep(3)} size="lg">Confirm Neural Structure</Button>
+                 <Button variant="outline" onClick={() => setStep(1)} size="lg">이전으로</Button>
+                 <Button variant="primary" onClick={() => setStep(3)} size="lg">뉴럴 구조 확정</Button>
               </div>
             </div>
           </motion.div>
@@ -238,12 +240,12 @@ export default function ShortsPage() {
                   <div className="relative">
                     <div className="p-12 rounded-[48px] bg-white dark:bg-zinc-900 shadow-2xl shadow-rose-500/10 relative z-10 border border-zinc-100 dark:border-zinc-800">
                       <Zap className="w-16 h-16 text-rose-500 mx-auto animate-pulse" />
-                      <h3 className="text-4xl font-black mt-8 tracking-tighter uppercase italic">Ready for Synthesis</h3>
-                      <p className="text-zinc-500 font-medium mt-4">"최첨단 AI가 당신의 꽃집을 위한 130% 스위트 스팟 영상을 생성할 준비를 마쳤습니다. 기하급수적 노출을 시작하시겠습니까?"</p>
+                      <h3 className="text-4xl font-black mt-8 tracking-tighter uppercase italic">뉴럴 합성 준비 완료</h3>
+                      <p className="text-zinc-500 font-medium mt-4">"최첨단 AI가 당신의 매장을 위한 130% 스위트 스팟 영상을 생성할 준비를 마쳤습니다. 기하급수적 노출을 시작하시겠습니까?"</p>
                     </div>
                   </div>
                   <Button onClick={handleGenerate} size="xl" className="w-full h-24 text-2xl shadow-[0_20px_50px_rgba(244,63,94,0.3)]">
-                    <Sparkles className="w-8 h-8 mr-4 shrink-0" /> START NEURAL SYNTHESIS
+                    <Sparkles className="w-8 h-8 mr-4 shrink-0" /> 지능형 신경망 합성 시작
                   </Button>
                </div>
              ) : (
@@ -252,8 +254,8 @@ export default function ShortsPage() {
                     <Sparkles className="w-24 h-24" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-3xl font-black tracking-tighter uppercase italic">Neural Synthesis in Progress</h3>
-                    <p className="text-zinc-500 font-black uppercase tracking-widest text-xs">Processing layers, temporal coherence, and audiowave matching...</p>
+                    <h3 className="text-3xl font-black tracking-tighter uppercase italic">뉴럴 합성 프로세스 가동 중</h3>
+                    <p className="text-zinc-500 font-black uppercase tracking-widest text-xs">레이어 처리, 시각적 일관성, 그리고 오디오 파동 매칭 중...</p>
                   </div>
                </div>
              )}
@@ -279,12 +281,12 @@ export default function ShortsPage() {
                     <div className="absolute bottom-12 left-12 right-12 space-y-6">
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500 text-white border border-rose-400/50 w-fit">
                             <Sparkles className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">AI Masterpiece</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest">AI 마스터피스</span>
                         </div>
                         <h2 className="text-4xl font-extrabold text-white leading-tight italic uppercase tracking-tighter uppercase italic">{scenario.hook}</h2>
                         <div className="flex gap-4">
                             <Button variant="glass" size="lg" className="flex-1">
-                                <Download className="w-5 h-5 mr-3" /> Save for {country === 'CN' ? "Douyin" : "Mobile"}
+                                <Download className="w-5 h-5 mr-3" /> {country === 'CN' ? "도우인용 저장" : "모바일용 저장"}
                             </Button>
                             <Button 
                                 variant="glass" 
@@ -294,7 +296,7 @@ export default function ShortsPage() {
                                 disabled={isPublishing}
                             >
                                 <Share2 className={cn("w-5 h-5 mr-3", isPublishing && "animate-spin")} /> 
-                                {isPublishing ? "PUBLISHING..." : (country === 'CN' ? "Auto Post to Douyin" : "Auto Post")}
+                                {isPublishing ? "배포 중..." : (country === 'CN' ? "도우인 자동 업로드" : "실시간 자동 배포")}
                             </Button>
                         </div>
                     </div>
@@ -305,30 +307,30 @@ export default function ShortsPage() {
                     <Card className="bg-gradient-to-tr from-zinc-900 to-black text-white border-none p-10 rounded-[48px] overflow-hidden relative group">
                         <div className="relative z-10 space-y-8">
                             <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-green-500 text-white font-black text-xs uppercase tracking-widest">
-                                <TrendingUp className="w-4 h-4" /> Reach Potential: {scenario.estimatedReachBoost}
+                                <TrendingUp className="w-4 h-4" /> 잠재 도달률: {scenario.estimatedReachBoost}
                             </div>
                             <div className="space-y-2">
-                                <h3 className="text-4xl font-black italic italic tracking-tighter uppercase italic tracking-tighter text-amber-400">The Script</h3>
-                                <p className="text-zinc-400 text-sm font-medium leading-relaxed italic italic tracking-tighter">
+                                <h3 className="text-4xl font-black italic tracking-tighter uppercase text-amber-400">쇼츠 시나리오</h3>
+                                <p className="text-zinc-400 text-sm font-medium leading-relaxed italic tracking-tighter">
                                     "{scenario.script}"
                                 </p>
                             </div>
                             <div className="space-y-6 pt-6 border-t border-white/10">
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Viral Hook</p>
+                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">바이럴 훅 (Hook)</p>
                                     <p className="font-bold text-lg">{scenario.hook}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Emotional Value</p>
+                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">정서적 가치 (Value)</p>
                                     <p className="font-medium text-zinc-300 text-sm">{scenario.value}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Direct CTA</p>
+                                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">직접 행동 유도 (CTA)</p>
                                     <p className="font-black text-rose-400 text-sm">{scenario.cta}</p>
                                 </div>
                             </div>
                             <Button onClick={() => setStep(3)} variant="outline" className="w-full border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white">
-                                <RotateCcw className="w-4 h-4 mr-3" /> Re-Generate Strategy
+                                <RotateCcw className="w-4 h-4 mr-3" /> 다른 전략으로 재생성
                             </Button>
                         </div>
                         <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:rotate-12 transition-transform duration-1000">
@@ -342,8 +344,8 @@ export default function ShortsPage() {
                                 <Music className="w-5 h-5" />
                             </div>
                             <div>
-                                <h4 className="font-black text-xl italic uppercase italic tracking-tighter italic tracking-tighter">AI Audio Engine</h4>
-                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Mood: Emotional Piano & Lo-Fi Beats</p>
+                                <h4 className="font-black text-xl italic uppercase tracking-tighter">AI 오디오 엔진</h4>
+                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Mood: 감성적인 피아노 & 로우파이 비트</p>
                             </div>
                          </div>
                          <div className="w-full h-2 bg-rose-500/10 rounded-full overflow-hidden">

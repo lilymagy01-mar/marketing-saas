@@ -16,7 +16,8 @@ import {
   Bell,
   Search,
   Sparkles,
-  Zap
+  Zap,
+  ShieldCheck
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -40,19 +41,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         router.push("/login");
       } else {
         setUser(session.user);
-        // Fetch role from profiles table
-        const { data: profile, error } = await supabase
+        // Explicitly fetch the most recent role from profiles
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', session.user.id)
           .single();
         
-        // Bring back standard Supabase connection
-        if (profile && profile.role) {
-          console.log("Fetched Role from DB:", profile.role);
+        if (profileError) {
+          console.error("Error fetching profile role:", profileError);
+          setRole('user');
+        } else if (profile && profile.role) {
+          console.log("Verified Role from DB:", profile.role);
           setRole(profile.role);
         } else {
-          console.log("No profile found - setting default user role");
           setRole('user');
         }
       }
@@ -65,12 +67,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [router]);
 
   const allItems = [
-    { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
-    { icon: Store, label: "Shop Profile", href: "/dashboard/shop" },
-    { icon: Video, label: "AI Shorts", href: "/dashboard/shorts" },
-    { icon: FileText, label: "Blog Engine", href: "/dashboard/blog" },
-    { icon: Hash, label: "Threads Bot", href: "/dashboard/threads" },
-    { icon: Settings, label: "System Config", href: "/dashboard/settings", adminOnly: true },
+    { icon: LayoutDashboard, label: "대시보드 총괄", href: "/dashboard" },
+    { icon: Zap, label: "운영 사령부", href: "/admin", adminOnly: true, special: true },
+    { icon: ShieldCheck, label: "마케팅 검토실", href: "/dashboard/review" },
+    { icon: Store, label: "매장 프로필", href: "/dashboard/shop" },
+    { icon: Video, label: "AI 쇼츠 제작", href: "/dashboard/shorts" },
+    { icon: FileText, label: "블로그 자동화", href: "/dashboard/blog" },
+    { icon: Hash, label: "스레드 봇", href: "/dashboard/threads" },
+    { icon: Settings, label: "시스템 설정", href: "/dashboard/settings" },
   ];
 
   const menuItems = allItems.filter(item => !item.adminOnly || role === 'admin');
@@ -106,7 +110,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               className="flex flex-col"
             >
               <span className="text-xl font-black tracking-tighter uppercase italic">LilyMag</span>
-              <span className="text-[10px] font-black tracking-[0.2em] text-zinc-400 uppercase">Automation ERP</span>
+              <span className="text-[10px] font-black tracking-[0.2em] text-zinc-400 uppercase">자동화 총괄 ERP</span>
             </motion.div>
           )}
         </div>
@@ -121,12 +125,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 className={cn(
                   "flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 group relative",
                   isActive 
-                    ? "bg-rose-500 text-white shadow-xl shadow-rose-500/20" 
-                    : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white",
+                    ? (item.special ? "bg-indigo-600 text-white shadow-xl shadow-indigo-600/30" : "bg-rose-500 text-white shadow-xl shadow-rose-500/20") 
+                    : item.special 
+                      ? "text-indigo-400 bg-indigo-500/5 border border-indigo-500/20 hover:bg-indigo-500/10"
+                      : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white",
                   !isSidebarOpen && "justify-center px-0 w-14 h-14 mx-auto"
                 )}
               >
-                <item.icon className={cn("w-5 h-5 shrink-0", isActive ? "text-white" : "group-hover:scale-110 transition-transform")} />
+                <item.icon className={cn(
+                  "w-5 h-5 shrink-0", 
+                  isActive ? "text-white" : item.special ? "text-indigo-500" : "group-hover:scale-110 transition-transform"
+                )} />
                 {isSidebarOpen && (
                   <span className="font-bold text-sm tracking-tight">
                     {item.label}
@@ -135,7 +144,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 {isActive && (
                   <motion.div 
                     layoutId="sidebar-active"
-                    className="absolute inset-0 bg-rose-500 rounded-2xl -z-10"
+                    className={cn(
+                      "absolute inset-0 rounded-2xl -z-10",
+                      item.special ? "bg-indigo-600" : "bg-rose-500"
+                    )}
                   />
                 )}
               </Link>
@@ -150,8 +162,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           )}>
             <div className="relative z-10 space-y-2">
               <Zap className="w-6 h-6 text-amber-400 fill-amber-400" />
-              <p className="text-xs font-black uppercase tracking-widest text-zinc-400">Pro Plan</p>
-              <p className="text-sm font-bold">Unlimited AI Generation</p>
+              <p className="text-xs font-black uppercase tracking-widest text-zinc-400">프로 플랜</p>
+              <p className="text-sm font-bold">무제한 AI 콘텐츠 생성</p>
             </div>
             <div className="absolute top-0 right-0 p-4 opacity-10 transform translate-x-1/4 -translate-y-1/4">
                <Sparkles className="w-24 h-24" />
@@ -169,7 +181,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             )}
           >
             <LogOut className="w-5 h-5" />
-            {isSidebarOpen && <span className="font-bold text-sm">Logout</span>}
+            {isSidebarOpen && <span className="font-bold text-sm">로그아웃</span>}
           </button>
         </div>
       </motion.aside>
@@ -192,7 +204,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <Search className="w-4 h-4" />
               <input 
                 type="text" 
-                placeholder="Search campaigns, shop settings..." 
+                placeholder="캠페인, 매장 설정 검색..." 
                 className="bg-transparent border-none outline-none focus:ring-0 text-zinc-600 dark:text-zinc-300 placeholder-zinc-500 font-medium w-64"
               />
             </div>
@@ -201,7 +213,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex items-center gap-6">
              <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 dark:bg-rose-950/20 rounded-full border border-rose-100 dark:border-rose-900/50">
                <div className="w-2 h-2 bg-rose-500 rounded-full animate-ping" />
-               <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest leading-none">System Live</span>
+               <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest leading-none">시스템 가동 중</span>
              </div>
             
             <button className="relative p-3 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-2xl transition-colors">
@@ -218,10 +230,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                <div className="flex flex-col items-end">
                  <span className="text-xs font-black tracking-tight">{user?.email?.split('@')[0] || 'User'}</span>
                  <span className={cn(
-                   "text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md",
-                   role === 'admin' ? "bg-rose-500 text-white" : "text-zinc-400 border border-zinc-200"
+                    "text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full",
+                    role === 'admin' ? "bg-[#ff006e] text-white shadow-lg shadow-[#ff006e]/30 animate-pulse" : "text-zinc-400 border border-zinc-200"
                  )}>
-                   {role}
+                   {role === 'admin' ? "관리자" : "일반 사용자"}
                  </span>
                </div>
                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-amber-400 shadow-lg shadow-rose-500/20 flex items-center justify-center text-white font-black uppercase">

@@ -1,0 +1,121 @@
+{
+  "name": "LilyMag_TOTAL_MASTER_v4.0_FINAL",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "master-saas-engine", "responseMode": "lastNode" },
+      "id": "trigger", "name": "사령부_명령_하달", "type": "n8n-nodes-base.webhook", "position": [0, 500], "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$node[\"사령부_명령_하달\"].json[\"headers\"][\"x-supabase-url\"]}}/rest/v1/user_settings?select=*",
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{$node[\"사령부_명령_하달\"].json[\"headers\"][\"x-supabase-key\"]}}" },
+            { "name": "Authorization", "value": "=Bearer {{$node[\"사령부_명령_하달\"].json[\"headers\"][\"x-supabase-key\"]}}" }
+          ]
+        }
+      },
+      "id": "db-keys", "name": "사용자_정보_조회", "type": "n8n-nodes-base.httpRequest", "position": [150, 500], "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "=Bearer {{$node[\"사령부_명령_하달\"].json[\"headers\"][\"x-openai-key\"]}}" }] },
+        "bodyParameters": {
+          "parameters": [
+            { "name": "prompt", "value": "={{$node[\"사령부_명령_하달\"].json[\"topic\"]}} 마케팅 고화질 화보" },
+            { "name": "size", "value": "1024x1024" }
+          ]
+        }
+      },
+      "id": "gen-art", "name": "AI_비주얼_아티스트", "type": "n8n-nodes-base.httpRequest", "position": [350, 500], "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "=Bearer {{$node[\"사령부_명령_하달\"].json[\"headers\"][\"x-openai-key\"]}}" }] },
+        "bodyParameters": {
+          "parameters": [
+            { "name": "model", "value": "gpt-4o" },
+            { "name": "messages", "value": "=[{\"role\": \"user\", \"content\": \"주제: {{$node[\"사령부_명령_하달\"].json[\"topic\"]}} 에 맞는 블로그/SNS/영상 3종 세트 생성\"}]" }
+          ]
+        }
+      },
+      "id": "gen-copy", "name": "AI_콘텐츠_천재작가", "type": "n8n-nodes-base.httpRequest", "position": [350, 300], "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.creatomate.com/v1/renders",
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer YOUR_VIDEO_KEY" }] }
+      },
+      "id": "gen-video", "name": "🎬_자동_영상_조립소", "type": "n8n-nodes-base.httpRequest", "position": [600, 700], "typeVersion": 2
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://graph.instagram.com/v15.0/me/media" },
+      "id": "pub-insta", "name": "Insta_배포", "type": "n8n-nodes-base.httpRequest", "position": [950, 50], "typeVersion": 2
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://www.googleapis.com/upload/youtube/v3/videos" },
+      "id": "pub-youtube", "name": "YouTube_배포", "type": "n8n-nodes-base.httpRequest", "position": [950, 180], "typeVersion": 2
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://business-api.tiktok.com/open_api/v1.3/video/upload/" },
+      "id": "pub-tiktok", "name": "TikTok_배포", "type": "n8n-nodes-base.httpRequest", "position": [950, 310], "typeVersion": 2
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://api.twitter.com/2/tweets" },
+      "id": "pub-x", "name": "X_Twitter_배포", "type": "n8n-nodes-base.httpRequest", "position": [950, 440], "typeVersion": 2
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://graph.threads.net/v1.0/me/threads" },
+      "id": "pub-threads", "name": "Threads_배포", "type": "n8n-nodes-base.httpRequest", "position": [950, 570], "typeVersion": 2
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://openapi.naver.com/v1/search/blog.json" },
+      "id": "pub-naver", "name": "NaverBlog_배포", "type": "n8n-nodes-base.httpRequest", "position": [950, 700], "typeVersion": 2
+    },
+    {
+      "parameters": { "method": "POST", "url": "https://www.googleapis.com/blogger/v3/blogs/" },
+      "id": "pub-blogger", "name": "Blogger_배포", "type": "n8n-nodes-base.httpRequest", "position": [950, 830], "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$node[\"사령부_명령_하달\"].json[\"headers\"][\"x-supabase-url\"]}}/rest/v1/marketing_logs",
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{$node[\"사령부_명령_하달\"].json[\"headers\"][\"x-supabase-key\"]}}" },
+            { "name": "Authorization", "value": "=Bearer {{$node[\"사령부_명령_하달\"].json[\"headers\"][\"x-supabase-key\"]}}" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "status", "value": "success" },
+            { "name": "topic", "value": "={{$node[\"사령부_명령_하달\"].json[\"topic\"]}}" },
+            { "name": "user_id", "value": "={{$node[\"사령부_명령_하달\"].json[\"user_id\"]}}" }
+          ]
+        }
+      },
+      "id": "report-back", "name": "💰_종합_결과_보고(DB기록)", "type": "n8n-nodes-base.httpRequest", "position": [1250, 500], "typeVersion": 2
+    }
+  ],
+  "connections": {
+    "사령부_명령_하달": { "main": [[{ "node": "사용자_정보_조회", "type": "main", "index": 0 }]] },
+    "사용자_정보_조회": { "main": [[{ "node": "AI_비주얼_아티스트", "type": "main", "index": 0 }, { "node": "AI_콘텐츠_천재작가", "type": "main", "index": 0 }]] },
+    "AI_비주얼_아티스트": { "main": [[{ "node": "🎬_자동_영상_조립소", "type": "main", "index": 0 }, { "node": "Insta_배포", "type": "main", "index": 0 }, { "node": "X_Twitter_배포", "type": "main", "index": 0 }, { "node": "Threads_배포", "type": "main", "index": 0 }]] },
+    "AI_콘텐츠_천재작가": { "main": [[{ "node": "Insta_배포", "type": "main", "index": 0 }, { "node": "YouTube_배포", "type": "main", "index": 0 }, { "node": "TikTok_배포", "type": "main", "index": 0 }, { "node": "X_Twitter_배포", "type": "main", "index": 0 }, { "node": "Threads_배포", "type": "main", "index": 0 }, { "node": "NaverBlog_배포", "type": "main", "index": 0 }, { "node": "Blogger_배포", "type": "main", "index": 0 }]] },
+    "🎬_자동_영상_조립소": { "main": [[{ "node": "YouTube_배포", "type": "main", "index": 0 }, { "node": "TikTok_배포", "type": "main", "index": 0 }, { "node": "Insta_배포", "type": "main", "index": 0 }, { "node": "X_Twitter_배포", "type": "main", "index": 0 }]] },
+    "Insta_배포": { "main": [[{ "node": "💰_종합_결과_보고(DB기록)", "type": "main", "index": 0 }]] },
+    "YouTube_배포": { "main": [[{ "node": "💰_종합_결과_보고(DB기록)", "type": "main", "index": 0 }]] },
+    "TikTok_배포": { "main": [[{ "node": "💰_종합_결과_보고(DB기록)", "type": "main", "index": 0 }]] },
+    "X_Twitter_배포": { "main": [[{ "node": "💰_종합_결과_보고(DB기록)", "type": "main", "index": 0 }]] },
+    "Threads_배포": { "main": [[{ "node": "💰_종합_결과_보고(DB기록)", "type": "main", "index": 0 }]] },
+    "NaverBlog_배포": { "main": [[{ "node": "💰_종합_결과_보고(DB기록)", "type": "main", "index": 0 }]] },
+    "Blogger_배포": { "main": [[{ "node": "💰_종합_결과_보고(DB기록)", "type": "main", "index": 0 }]] }
+  }
+}

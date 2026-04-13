@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { 
@@ -17,7 +17,7 @@ import {
   Smile,
   ArrowRight
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -37,6 +37,7 @@ export default function ThreadsPage() {
     try {
       const response = await fetch("/api/generate/copy", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, type: "threads", country }),
       });
       const data = await response.json();
@@ -56,6 +57,7 @@ export default function ThreadsPage() {
       const platform = country === 'CN' ? 'WeChat Moments' : 'Threads/X (Twitter)';
       const response = await fetch("/api/automation/publish", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           platform, 
           country, 
@@ -65,7 +67,7 @@ export default function ThreadsPage() {
       });
       const data = await response.json();
       if (data.status === 'success') {
-        alert(`${platform} 諛고룷 ?꾨즺! URL: ${data.postUrl}`);
+        alert(`${platform} 배포 완료! URL: ${data.postUrl}`);
       }
       setIsPublishing(false);
     } catch (error) {
@@ -80,16 +82,16 @@ export default function ThreadsPage() {
       <div className="flex flex-col gap-4">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-50 dark:bg-violet-950/20 border border-violet-100 dark:border-violet-900/50 w-fit text-violet-600">
           <MessageSquare className="w-4 h-4" />
-          <span className="text-[10px] font-black uppercase tracking-widest leading-none">Social Catalyst v3.0</span>
+          <span className="text-[10px] font-black uppercase tracking-widest leading-none">소셜 기폭제 v3.0</span>
         </div>
         <h1 className="text-6xl font-black tracking-tighter uppercase italic leading-[0.9]">
-           {country === 'CN' ? "WeChat Moments Catalyst" : "Threads Catalyst"}
+           {country === 'CN' ? "위챗 모멘트 기폭제" : "쓰레드 기폭제"}
         </h1>
         <p className="text-zinc-500 font-medium max-w-xl text-lg leading-relaxed">
-           {country === 'CN' ? '"?꾩콟 紐⑤찘?몄쓽 ?좊ː 湲곕컲 ?ㅽ듃?뚰겕瑜?怨듬왂?섏뿬, ?ъ옣?섏쓽 留ㅼ옣??以묎뎅 VIP?ㅼ쓽 ?④낏 苑껋쭛?쇰줈 ?깃레?쒗궢?덈떎."' : '"?ъ옣?섏쓽 苑껋씠 MZ?몃????쇰뱶瑜??먮졊?섎룄濡? 媛???숉븯怨?留ㅽ샊?곸씤 ?쒖궗瑜?李쎌“?⑸땲??"'}
+           {country === 'CN' ? '"위챗 모멘트의 친구 기반 네트워크를 공략하여, 사장님의 매장 주변 VIP들의 취향 꽃집으로 자리매김합니다."' : '"사장님의 꽃이 MZ세대의 피드를 물들이도록, 감성 충만하고 매력적인 메시지를 창조합니다."'}
         </p>
         <div className="mt-4 flex items-center gap-4">
-           <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Target Strategy</span>
+           <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">타켓 전략</span>
            <CountrySelector selected={country} onSelect={setCountry} />
         </div>
       </div>
@@ -104,14 +106,14 @@ export default function ThreadsPage() {
                     <Rocket className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black italic uppercase tracking-tighter">Viral Prompt</h3>
-                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Auto-Alchemy Mode Active</p>
+                    <h3 className="text-2xl font-black italic uppercase tracking-tighter">바이럴 프롬프트</h3>
+                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">자동 연금술 모드 가동 중</p>
                   </div>
                </div>
 
                <div className="space-y-4">
                  <textarea 
-                   placeholder="?대뼡 苑껋씠???뚯떇???щ━怨??띠쑝?좉??? (?? ?덈꼍 諛곗넚 泥??λ?, 怨좊갚 ?깃났 ?⑦궎吏)"
+                   placeholder="어떤 꽃이 어떤 분위기를 전하고 싶으신가요? (예: 화사한 봄꽃 배송 첫 구매, 졸업 축하 꽃다발)"
                    value={prompt}
                    onChange={(e) => setPrompt(e.target.value)}
                    className="w-full h-40 bg-zinc-800 border border-zinc-700 rounded-[32px] p-8 text-lg focus:ring-4 focus:ring-violet-500/20 outline-none transition-all placeholder:text-zinc-600 font-bold resize-none"
@@ -123,11 +125,11 @@ export default function ThreadsPage() {
                  >
                    {isGenerating ? (
                       <span className="flex items-center gap-3">
-                        <RotateCcw className="w-6 h-6 animate-spin" /> SYNTHESIZING...
+                        <RotateCcw className="w-6 h-6 animate-spin" /> 합성 중...
                       </span>
                    ) : (
                       <span className="flex items-center gap-3">
-                        <Zap className="w-6 h-6 fill-white" /> IGNITE TRENDS
+                        <Zap className="w-6 h-6 fill-white" /> 트렌드 점화
                       </span>
                    )}
                  </Button>
@@ -135,9 +137,9 @@ export default function ThreadsPage() {
 
                <div className="grid grid-cols-3 gap-4">
                   {[
-                    { label: "Hip & Z", icon: Smile },
-                    { label: "Emotional", icon: Heart },
-                    { label: "Flash Sale", icon: Zap }
+                    { label: "힙 & MZ", icon: Smile },
+                    { label: "감성 충만", icon: Heart },
+                    { label: "반짝 세일", icon: Zap }
                   ].map((style) => (
                     <div key={style.label} className="p-4 rounded-3xl bg-zinc-800/50 border border-zinc-700/50 flex flex-col items-center justify-center gap-2 hover:bg-zinc-800 transition-colors cursor-pointer group">
                        <style.icon className="w-5 h-5 text-zinc-500 group-hover:text-violet-400 transition-colors" />
@@ -153,16 +155,16 @@ export default function ThreadsPage() {
 
           <Card className="p-8 bg-gradient-to-br from-violet-500/5 to-transparent border-zinc-100 dark:border-zinc-900 rounded-[40px]">
              <div className="flex items-center justify-between mb-6">
-                <h4 className="font-black text-lg italic uppercase tracking-tighter">AI Trend Score</h4>
-                <div className="px-3 py-1 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 text-[10px] font-black rounded-full uppercase tracking-widest">Global Live</div>
+                <h4 className="font-black text-lg italic uppercase tracking-tighter">AI 트렌드 점수</h4>
+                <div className="px-3 py-1 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 text-[10px] font-black rounded-full uppercase tracking-widest">글로벌 라이브</div>
              </div>
              <div className="space-y-6">
                 <div className="flex items-center gap-6">
                    <div className="text-4xl font-black italic tracking-tighter">98.4</div>
                    <div className="flex-1 space-y-2">
                       <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                         <span>Potential Reach</span>
-                         <span>Excellent</span>
+                         <span>잠재적 도달률</span>
+                         <span>우수</span>
                       </div>
                       <div className="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                         <motion.div initial={{ width: 0 }} animate={{ width: "98%" }} className="h-full bg-violet-500" />
@@ -186,9 +188,9 @@ export default function ThreadsPage() {
                   <div className="w-24 h-24 bg-zinc-50 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-8 shadow-inner">
                     <MessageSquare className="w-10 h-10 text-zinc-300" />
                   </div>
-                  <h3 className="text-2xl font-black uppercase italic tracking-tighter text-zinc-400 mb-2">Feed Inactive</h3>
+                  <h3 className="text-2xl font-black uppercase italic tracking-tighter text-zinc-400 mb-2">피드 비활성</h3>
                   <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest max-w-[240px]">
-                    ?숇젰??二쇱엯?섏떆硫??닿납??諛붿씠???쇰뱶媛 ?앹꽦?⑸땲??
+                    동력을 주입하시면 최강의 바이럴 피드가 생성됩니다.
                   </p>
                </motion.div>
             ) : isGenerating ? (
@@ -205,8 +207,8 @@ export default function ThreadsPage() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <h3 className="text-2xl font-black uppercase italic tracking-tighter">Catalyzing Interaction</h3>
-                    <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest animate-pulse">Scanning social trends & sentiment analysis...</p>
+                    <h3 className="text-2xl font-black uppercase italic tracking-tighter">상호작용 촉발 중</h3>
+                    <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest animate-pulse">소셜 트렌드 및 감정 분석 스캔 중...</p>
                   </div>
                </motion.div>
             ) : (
@@ -229,13 +231,13 @@ export default function ThreadsPage() {
                     </div>
 
                     <div className="space-y-6">
-                       <p className="text-2xl font-black tracking-tight leading-relaxed italic uppercase italic">
+                       <p className="text-2xl font-black tracking-tight leading-relaxed italic uppercase">
                           {result.title}
                        </p>
                        <p className="text-zinc-600 dark:text-zinc-400 text-lg leading-relaxed font-medium">
                           {result.hook}
                        </p>
-                       <p className="text-zinc-500 dark:text-zinc-500 text-base leading-relaxed italic italic tracking-tighter">
+                       <p className="text-zinc-500 dark:text-zinc-500 text-base leading-relaxed italic tracking-tighter">
                           {result.value}
                        </p>
                        <div className="p-6 bg-violet-50 dark:bg-violet-950/20 border border-violet-100 dark:border-violet-900/50 rounded-3xl">
@@ -273,7 +275,7 @@ export default function ThreadsPage() {
                       disabled={isPublishing}
                     >
                       <Share2 className={cn("w-6 h-6 mr-3", isPublishing && "animate-spin")} /> 
-                      {isPublishing ? "PUBLISHING..." : (country === 'CN' ? "PUBLISH TO WECHAT" : "PUBLISH TO SNS")}
+                      {isPublishing ? "배포 중..." : (country === 'CN' ? "위챗에 배포하기" : "SNS에 배포하기")}
                     </Button>
                     <Button variant="outline" size="xl" onClick={() => setResult(null)} className="w-[88px] rounded-[32px] border-zinc-200 dark:border-zinc-800 p-0 flex items-center justify-center">
                        <RotateCcw className="w-8 h-8 text-zinc-400" />

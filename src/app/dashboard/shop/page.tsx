@@ -27,16 +27,16 @@ export default function ShopPage() {
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 w-fit">
             <Store className="w-4 h-4 text-indigo-500" />
-            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none">Authority Profile v4.0</span>
+            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none">권위 프로필 v4.0</span>
           </div>
           <h1 className="text-6xl font-black tracking-tighter uppercase italic italic tracking-tighter leading-[0.9]">
-             Shop Authority
+             매장 권위 설정
           </h1>
           <p className="text-zinc-500 font-medium max-w-xl text-lg leading-relaxed">
              "사장님의 매장이 지역에서 독보적인 '권위'를 가질 수 있도록 브랜딩의 모든 요소를 시스템화합니다."
           </p>
         </div>
-        <Button variant="outline" size="lg">Edit Brand Assets</Button>
+        <Button variant="outline" size="lg">브랜드 자산 편집</Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -57,10 +57,10 @@ export default function ShopPage() {
                     <h2 className="text-5xl font-black tracking-tighter uppercase italic">Lily Flower Lab</h2>
                     <div className="flex flex-wrap gap-4">
                        <div className="flex items-center gap-2 text-sm font-bold text-zinc-500">
-                         <MapPin className="w-4 h-4" /> Seoul, South Korea
+                         <MapPin className="w-4 h-4" /> 대한민국 서울
                        </div>
                        <div className="flex items-center gap-2 text-sm font-bold text-zinc-500">
-                         <Clock className="w-4 h-4" /> Open 10:00 - 20:00
+                         <Clock className="w-4 h-4" /> 영업시간 10:00 - 20:00
                        </div>
                     </div>
                   </div>
@@ -68,7 +68,7 @@ export default function ShopPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4">
-                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Global Reach</p>
+                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">글로벌 도달 범위</p>
                     <div className="p-6 bg-zinc-50 dark:bg-zinc-900 rounded-[32px] border border-zinc-100 dark:border-zinc-800 flex items-center justify-between shadow-inner">
                       <div className="flex items-center gap-4">
                         <div className="p-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl shadow-lg">
@@ -80,7 +80,7 @@ export default function ShopPage() {
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Store Hotline</p>
+                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">매장 상담 센터</p>
                     <div className="p-6 bg-zinc-50 dark:bg-zinc-900 rounded-[32px] border border-zinc-100 dark:border-zinc-800 flex items-center justify-between shadow-inner">
                       <div className="flex items-center gap-4">
                         <div className="p-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl shadow-lg">
@@ -88,7 +88,7 @@ export default function ShopPage() {
                         </div>
                         <span className="font-bold">+82 10-1234-5678</span>
                       </div>
-                      <Button variant="ghost" size="sm">Call Agent</Button>
+                       <Button variant="ghost" size="sm">에이전트 상담</Button>
                     </div>
                   </div>
                 </div>
@@ -97,7 +97,7 @@ export default function ShopPage() {
 
           <div className="space-y-6">
             <h3 className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-4">
-               <Aperture className="w-8 h-8 text-indigo-500 animate-spin-slow" /> Neural Connections
+               <Aperture className="w-8 h-8 text-indigo-500 animate-spin-slow" /> 마케팅 채널 허브
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <Card className="hover:border-rose-500/20 transition-all duration-500 p-8">
@@ -106,17 +106,17 @@ export default function ShopPage() {
                         <Camera className="w-6 h-6" />
                      </div>
                      <div className="px-3 py-1 bg-green-50 dark:bg-green-950/20 rounded-full text-green-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                        <ShieldCheck className="w-3 h-3" /> Live Sync
+                        <ShieldCheck className="w-3 h-3" /> 실시간 동기화
                      </div>
                   </div>
-                  <h4 className="text-xl font-bold italic uppercase tracking-tighter">Instagram Business</h4>
-                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-6">Master Channel Active</p>
-                  <Button variant="outline" className="w-full">Configuration</Button>
+                  <h4 className="text-xl font-bold italic uppercase tracking-tighter">인스타그램 비즈니스</h4>
+                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-6">마스터 채널 활성화됨</p>
+                  <Button variant="outline" className="w-full">세부 설정 및 관리</Button>
                </Card>
                <Card className="border-dashed flex flex-col items-center justify-center p-8 opacity-60 hover:opacity-100 transition-all">
                   <MessageSquare className="w-12 h-12 text-zinc-200 mb-6" />
-                  <p className="text-xs font-black uppercase tracking-widest text-zinc-400 mb-6">NAVER BLOG ENGINE</p>
-                  <Button variant="secondary" className="w-full">Connect Channel</Button>
+                  <p className="text-xs font-black uppercase tracking-widest text-zinc-400 mb-6">네이버 블로그 자동화</p>
+                  <Button variant="secondary" className="w-full">채널 연동하기</Button>
                </Card>
             </div>
           </div>
@@ -130,37 +130,37 @@ export default function ShopPage() {
                  <Zap className="w-10 h-10 text-amber-400 fill-amber-400" />
                </div>
                <div className="space-y-4">
-                  <h3 className="text-4xl font-black italic uppercase italic tracking-tighter leading-none">Authority<br />Engine</h3>
+                   <h3 className="text-4xl font-black italic uppercase italic tracking-tighter leading-none">권위 증명<br />엔진</h3>
                   <p className="text-indigo-200 text-sm font-medium leading-relaxed">
                     "물리적 한계를 거부하세요. 매장 사장님의 뇌를 딥러닝하여 AI가 대신 홍보하는 프리미엄 자동화 모드를 활성화했습니다."
                   </p>
                </div>
                <div className="space-y-4">
-                 <div className="flex justify-between items-end border-b border-white/10 pb-4">
-                    <span className="text-xs font-bold uppercase tracking-widest text-indigo-300">System Efficiency</span>
-                    <span className="text-2xl font-black italic italic tracking-tighter text-white">98.4%</span>
-                 </div>
-                 <div className="flex justify-between items-end border-b border-white/10 pb-4">
-                    <span className="text-xs font-bold uppercase tracking-widest text-indigo-300">Authority Score</span>
-                    <span className="text-2xl font-black italic italic tracking-tighter text-amber-400">Elite</span>
-                 </div>
+                  <div className="flex justify-between items-end border-b border-white/10 pb-4">
+                     <span className="text-xs font-bold uppercase tracking-widest text-indigo-300">시스템 연동 효율</span>
+                     <span className="text-2xl font-black italic italic tracking-tighter text-white">98.4%</span>
+                  </div>
+                  <div className="flex justify-between items-end border-b border-white/10 pb-4">
+                     <span className="text-xs font-bold uppercase tracking-widest text-indigo-300">권위 지수 (Score)</span>
+                     <span className="text-2xl font-black italic italic tracking-tighter text-amber-400">Elite</span>
+                  </div>
                </div>
-               <Button variant="glass" size="xl" className="w-full mt-4">Upgrade Strategy</Button>
+               <Button variant="glass" size="xl" className="w-full mt-4">마케팅 전략 업그레이드</Button>
             </div>
             <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-1000" />
             <Sparkles className="absolute -bottom-10 -right-10 w-64 h-64 text-white/5 group-hover:rotate-45 transition-transform duration-[4000ms]" />
           </Card>
 
           <Card className="p-8 border-none bg-zinc-50 dark:bg-zinc-900 rounded-[40px] shadow-inner">
-             <h4 className="text-xs font-black uppercase tracking-widest text-zinc-400 mb-6 flex items-center gap-2">
-               <Map className="w-4 h-4" /> Global Footprint
+              <h4 className="text-xs font-black uppercase tracking-widest text-zinc-400 mb-6 flex items-center gap-2">
+               <Map className="w-4 h-4" /> 브랜드 거점 지도
              </h4>
              <div className="aspect-square bg-zinc-200 dark:bg-black rounded-[32px] overflow-hidden relative shadow-inner">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(244,63,94,0.1)_0,transparent_100%)] animate-pulse" />
                 <div className="flex h-full items-center justify-center">
-                   <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 text-[10px] font-black uppercase tracking-tighter text-zinc-500">
-                     Visualizing reach map...
-                   </div>
+                    <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 text-[10px] font-black uppercase tracking-tighter text-zinc-500">
+                     도달 범위 분석 중...
+                    </div>
                 </div>
              </div>
           </Card>

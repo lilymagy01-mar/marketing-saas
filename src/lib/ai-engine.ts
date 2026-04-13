@@ -19,6 +19,16 @@ const STORE_TONE_GUIDE: Record<StorePersona, string> = {
   'Expert & Professional': "Speak like a master florist with 30 years of experience. Use professional terminology and focus on quality, techniques, and care instructions."
 };
 
+export function normalizePersona(persona: string): StorePersona {
+  const personaMap: Record<string, StorePersona> = {
+    'Elegant': 'Elegant & Premium',
+    'Warm': 'Warm & Emotional',
+    'Trendy': 'Trendy & Hip',
+    'Expert': 'Expert & Professional'
+  };
+  return personaMap[persona] || (persona as StorePersona) || 'Elegant & Premium';
+}
+
 const COUNTRY_PERSONAS: Record<CountryCode, Persona> = {
   KR: {
     name: "Korean Psychology Strategist",

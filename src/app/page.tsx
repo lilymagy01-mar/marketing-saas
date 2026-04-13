@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight, BarChart3, Rocket, Sparkles, Zap } from "lucide-react";
 
 export default function Home() {
