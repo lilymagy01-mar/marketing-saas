@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dmkbtlgkqwdykkllcsoj.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRta2J0bGdrcXdkeWtrbGxjc29qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTcxNDQsImV4cCI6MjA5MTA3MzE0NH0.FjWdCLc0GszDQrYK4eJkVUAJrx7QPTXel9yASK1Vj3g'
 
 // ============================================================
 // Browser Client (클라이언트 컴포넌트 전용)
@@ -15,11 +15,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // ⚠️ 절대 클라이언트 번들에 포함시키지 말 것!
 // ============================================================
 export function createServerSupabaseClient() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!serviceRoleKey) {
-    console.warn('[Supabase] SUPABASE_SERVICE_ROLE_KEY is not set, falling back to anon key')
-    return createClient(supabaseUrl, supabaseAnonKey)
-  }
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRta2J0bGdrcXdkeWtrbGxjc29qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTQ5NzE0NCwiZXhwIjoyMDkxMDczMTQ0fQ.jjSIRDY9u3cnD71FPCdwNU-czB7_XTbTsFCTKvf7Ydo'
+  
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
