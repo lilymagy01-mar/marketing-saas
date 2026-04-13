@@ -184,7 +184,7 @@ export default function ReviewPage() {
                          <Edit3 className="w-3 h-3 mr-2" /> 수정
                        </Button>
                        <Button 
-                         variant="destructive" 
+                         variant="ghost" 
                          className="flex-1 bg-rose-500/20 hover:bg-rose-500/40 backdrop-blur-md border-none text-rose-200 font-black uppercase text-[10px]"
                          onClick={() => deleteDraft(draft.id)}
                        >
