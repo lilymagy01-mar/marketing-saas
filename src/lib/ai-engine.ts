@@ -16,7 +16,7 @@ const STORE_TONE_GUIDE: Record<StorePersona, string> = {
   'Elegant & Premium': "Speak like a luxury concierge. Use sophisticated vocabulary and prioritize aesthetic values. High-class storytelling.",
   'Warm & Emotional': "Speak like a dear friend. Use gentle, poetic language that touches the heart. Focus on the emotional meaning of flowers.",
   'Trendy & Hip': "Speak like a viral influencer. Use energetic, short sentences and trending slang (for the target country). Focus on visual impact and 'cool' factor.",
-  'Expert & Professional': "Speak like a master florist with 30 years of experience. Use professional terminology and focus on quality, techniques, and care instructions."
+  'Expert & Professional': "Speak like a master expert with 30 years of experience. Use professional terminology and focus on quality, techniques, and strategic value."
 };
 
 export function normalizePersona(persona: string): StorePersona {
@@ -69,7 +69,11 @@ const openai = new OpenAI({
 export async function generateShortsScenario(
   prompt: string, 
   country: CountryCode = 'KR', 
-  storePersona: StorePersona = 'Elegant & Premium'
+  storePersona: StorePersona = 'Elegant & Premium',
+  industry: string = 'flower',
+  targetAudience: string = 'general customers',
+  isAdmin: boolean = false,
+  marketingTheme?: string
 ) {
   const persona = COUNTRY_PERSONAS[country];
   const storeTone = STORE_TONE_GUIDE[storePersona];
@@ -87,17 +91,25 @@ export async function generateShortsScenario(
     };
   }
 
-  const systemPrompt = `You are a World-Class Marketing AI specializing in '${persona.name}'. 
-  Current Branch Persona: ${storePersona}. Tone Guide: ${storeTone}.
-  Target Market: ${country}. Exclusive Platforms: ${persona.platforms.join(", ")}.
-  Strategy: ${persona.strategy}. 
-  MANDATORY: Use terminology specific to ${persona.platforms.join("/")}. No references to blocked platforms in ${country}.
-  Output JSON format: { "hook": string, "value": string, "cta": string, "script": string, "estimatedReachBoost": string }`;
+  const systemPrompt = isAdmin 
+    ? `You are a Tier-1 Growth Hacker and SaaS Marketer. 
+       Your goal is to promote the 'LilyMag Marketing ERP & Automation' platform.
+       Focus on ROI, saving time, automation, and business growth.
+       Current Tone: ${storePersona}. Tone Guide: ${storeTone}.
+       Target Market: ${country}. Strategy: ${persona.strategy}.`
+    : `You are a World-Class Marketing AI specializing in '${persona.name}' for the ${industry} industry. 
+       Current Branch Persona: ${storePersona}. Tone Guide: ${storeTone}.
+       ${marketingTheme ? `Marketing Theme/Subject: ${marketingTheme}. Use this context to differentiate the brand.` : ''}
+       Target Audience: ${targetAudience}. Industry: ${industry}.
+       Target Market: ${country}. Exclusive Platforms: ${persona.platforms.join(", ")}.
+       Strategy: ${persona.strategy}.`;
+
+  const finalSystemPrompt = systemPrompt + `\nOutput JSON format: { "hook": string, "value": string, "cta": string, "script": string, "estimatedReachBoost": string }`;
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: systemPrompt },
+      { role: "system", content: finalSystemPrompt },
       { role: "user", content: `Create a viral content scenario for: ${prompt}. Language: ${country}.` }
     ],
     response_format: { type: "json_object" },
@@ -110,7 +122,11 @@ export async function generateMarketingCopy(
   prompt: string, 
   type: 'blog' | 'threads', 
   country: CountryCode = 'KR',
-  storePersona: StorePersona = 'Elegant & Premium'
+  storePersona: StorePersona = 'Elegant & Premium',
+  industry: string = 'flower',
+  targetAudience: string = 'general customers',
+  isAdmin: boolean = false,
+  marketingTheme?: string
 ) {
   const persona = COUNTRY_PERSONAS[country];
   const storeTone = STORE_TONE_GUIDE[storePersona];
@@ -129,16 +145,24 @@ export async function generateMarketingCopy(
     };
   }
 
-  const systemPrompt = `You are a Master Content Alchemist for the ${country} market. 
-  Current Branch Persona: ${storePersona}. Tone Guide: ${storeTone}.
-  Target Platform: ${targetPlatform}. Strategy: ${persona.strategy}.
-  Language: ${country}. Use specific platform features (hashtags for Red, community tone for WeChat).
-  Output JSON format: { "title": string, "hook": string, "value": string, "cta": string }`;
+  const systemPrompt = isAdmin
+    ? `You are a Master Strategic Copywriter for B2B SaaS.
+       Focus on how 'LilyMag ERP' solves marketing friction and automates growth.
+       Platform: ${targetPlatform}. Tone Guide: ${storeTone}.
+       Language: ${country}. Strategy: ${persona.strategy}.`
+    : `You are a Master Content Alchemist for the ${country} market in the ${industry} industry. 
+       Current Branch Persona: ${storePersona}. Tone Guide: ${storeTone}.
+       ${marketingTheme ? `Marketing Theme/Subject: ${marketingTheme}. Use this context to differentiate the brand.` : ''}
+       Target Audience: ${targetAudience}. Industry: ${industry}.
+       Target Platform: ${targetPlatform}. Strategy: ${persona.strategy}.
+       Language: ${country}.`;
+
+  const finalSystemPrompt = systemPrompt + `\nOutput JSON format: { "title": string, "hook": string, "value": string, "cta": string }`;
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: systemPrompt },
+      { role: "system", content: finalSystemPrompt },
       { role: "user", content: `Generate ${targetPlatform} content for: ${prompt}` }
     ],
     response_format: { type: "json_object" },

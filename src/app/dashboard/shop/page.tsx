@@ -1,4 +1,5 @@
 "use client";
+// Force re-compile to fix HMR ReferenceError: Button
 
 import { 
   Store, 
@@ -18,26 +19,139 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { IndustrySelector, IndustryType } from "@/components/dashboard/industry-selector";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { Loader2, CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function ShopPage() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [industry, setIndustry] = useState<IndustryType>('SAAS');
+  const [shopName, setShopName] = useState("V4 Digital HQ");
+  const [marketingTheme, setMarketingTheme] = useState("권위와 신뢰 중심의 프리미엄 마케팅");
+  const [industryMap, setIndustryMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  async function fetchInitialData() {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // 1. Fetch industries to map codes to IDs
+    const { data: industriesData } = await supabase.from('industries').select('*');
+    if (industriesData) {
+      const map: Record<string, string> = {};
+      industriesData.forEach(ind => map[ind.code] = ind.id);
+      setIndustryMap(map);
+    }
+
+    // 2. Fetch current shop settings
+    const { data: settings } = await supabase
+      .from('shop_settings')
+      .select('*, industries!industry_id(code)')
+      .eq('user_id', user.id)
+      .single();
+
+    if (settings) {
+      if (settings.industries?.code) {
+        setIndustry(settings.industries.code as IndustryType);
+      }
+      setMarketingTheme(settings.marketing_theme || "");
+    }
+
+    // 3. Fetch shop name from shops table or profile
+    const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', user.id).single();
+    if (profile?.display_name) setShopName(profile.display_name);
+
+    setLoading(false);
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setSaved(false);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const industryId = industryMap[industry];
+
+      // Update shop_settings
+      const { error: settingsError } = await supabase
+        .from('shop_settings')
+        .update({
+          industry_id: industryId,
+          marketing_theme: marketingTheme,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (settingsError) throw settingsError;
+
+      // Update profile display_name as shop name placeholder
+      await supabase.from('profiles').update({ display_name: shopName }).eq('id', user.id);
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      console.error("Save failed:", error);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="h-[80vh] flex flex-col items-center justify-center space-y-4">
+        <Loader2 className="w-12 h-12 text-rose-500 animate-spin" />
+        <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">전술 데이터 동기화 중...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-12 pt-8">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 w-fit">
-            <Store className="w-4 h-4 text-indigo-500" />
-            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none">권위 프로필 v4.0</span>
+            <ShieldCheck className="w-4 h-4 text-indigo-500" />
+            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none">비즈니스 사령부 v4.0</span>
           </div>
-          <h1 className="text-6xl font-black tracking-tighter uppercase italic italic tracking-tighter leading-[0.9]">
-             매장 권위 설정
+          <h1 className="text-6xl font-black tracking-tighter uppercase italic leading-[0.9]">
+             비즈니스 권위 설정
           </h1>
           <p className="text-zinc-500 font-medium max-w-xl text-lg leading-relaxed">
-             "사장님의 매장이 지역에서 독보적인 '권위'를 가질 수 있도록 브랜딩의 모든 요소를 시스템화합니다."
+             "사장님의 비즈니스가 해당 지역에서 압도적 1위의 '권위'를 가질 수 있도록 시스템을 최적화합니다."
           </p>
         </div>
-        <Button variant="outline" size="lg">브랜드 자산 편집</Button>
+        <Button 
+          variant={saved ? "secondary" : "outline"} 
+          size="lg" 
+          onClick={handleSave}
+          disabled={saving}
+          className={cn(
+            "rounded-2xl font-bold min-w-[140px] transition-all",
+            saved && "bg-green-500 hover:bg-green-600 text-white border-none"
+          )}
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : (saved ? <CheckCircle2 className="w-4 h-4 mr-2" /> : null)}
+          {saving ? "저장 중..." : (saved ? "저장 완료" : "변경사항 저장")}
+        </Button>
       </div>
+
+      {/* Industry Selection */}
+      <section className="space-y-6">
+        <h3 className="text-xl font-black italic uppercase tracking-tighter flex items-center gap-3">
+          <Zap className="w-5 h-5 text-amber-500" /> 업종 인텔리전스 선택
+        </h3>
+        <IndustrySelector selected={industry} onSelect={setIndustry} />
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Left: Shop Overview */}
@@ -50,12 +164,30 @@ export default function ShopPage() {
                 <div className="flex flex-col md:flex-row items-end gap-8">
                   <div className="w-40 h-40 rounded-[48px] bg-white dark:bg-zinc-900 shadow-2xl p-2 ring-1 ring-zinc-100 dark:ring-zinc-800">
                     <div className="w-full h-full rounded-[40px] bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-white text-5xl font-black italic shadow-inner">
-                       LF
+                       {shopName.slice(0, 2).toUpperCase()}
                     </div>
                   </div>
-                  <div className="flex-1 space-y-3">
-                    <h2 className="text-5xl font-black tracking-tighter uppercase italic">Lily Flower Lab</h2>
-                    <div className="flex flex-wrap gap-4">
+                  <div className="flex-1 space-y-4">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">비즈니스 명칭</p>
+                      <input 
+                        value={shopName}
+                        onChange={(e) => setShopName(e.target.value)}
+                        className="text-5xl font-black tracking-tighter uppercase italic bg-transparent border-none outline-none focus:ring-2 focus:ring-rose-500/20 rounded-xl w-full"
+                      />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">브랜딩 메인 주제 / 테마</p>
+                      <input 
+                        value={marketingTheme}
+                        onChange={(e) => setMarketingTheme(e.target.value)}
+                        placeholder="예: 현대적인 미니멀리즘, 감성적인 꽃 이야기 등"
+                        className="text-xl font-bold tracking-tight text-zinc-500 bg-transparent border-b border-zinc-200 dark:border-zinc-800 outline-none focus:border-rose-500 transition-all w-full pb-2"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap gap-4 pt-2">
                        <div className="flex items-center gap-2 text-sm font-bold text-zinc-500">
                          <MapPin className="w-4 h-4" /> 대한민국 서울
                        </div>
@@ -74,7 +206,7 @@ export default function ShopPage() {
                         <div className="p-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl shadow-lg">
                           <Globe className="w-5 h-5" />
                         </div>
-                        <span className="font-bold">lilyflower.com</span>
+                         <span className="font-bold">v4hq.com</span>
                       </div>
                       <Link2 className="text-zinc-300 w-5 h-5" />
                     </div>
@@ -130,7 +262,7 @@ export default function ShopPage() {
                  <Zap className="w-10 h-10 text-amber-400 fill-amber-400" />
                </div>
                <div className="space-y-4">
-                   <h3 className="text-4xl font-black italic uppercase italic tracking-tighter leading-none">권위 증명<br />엔진</h3>
+                    <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none">브랜드 권위<br />엔진</h3>
                   <p className="text-indigo-200 text-sm font-medium leading-relaxed">
                     "물리적 한계를 거부하세요. 매장 사장님의 뇌를 딥러닝하여 AI가 대신 홍보하는 프리미엄 자동화 모드를 활성화했습니다."
                   </p>
@@ -145,7 +277,15 @@ export default function ShopPage() {
                      <span className="text-2xl font-black italic italic tracking-tighter text-amber-400">Elite</span>
                   </div>
                </div>
-               <Button variant="glass" size="xl" className="w-full mt-4">마케팅 전략 업그레이드</Button>
+               <Button 
+                 variant="glass" 
+                 size="xl" 
+                 className="w-full mt-4"
+                 onClick={handleSave}
+                 disabled={saving}
+               >
+                 {saving ? "전략 반영 중..." : "마케팅 전략 업그레이드"}
+               </Button>
             </div>
             <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-1000" />
             <Sparkles className="absolute -bottom-10 -right-10 w-64 h-64 text-white/5 group-hover:rotate-45 transition-transform duration-[4000ms]" />

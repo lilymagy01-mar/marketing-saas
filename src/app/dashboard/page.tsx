@@ -35,7 +35,6 @@ export default function DashboardPage() {
 
   const [recentCampaigns, setRecentCampaigns] = useState<any[]>([]);
   const [isTesting, setIsTesting] = useState(false);
-  const [role, setRole] = useState<string>('user');
 
   async function fetchDashboardData() {
     setLoading(true);
@@ -45,29 +44,7 @@ export default function DashboardPage() {
       return;
     }
 
-    // Role Fetch
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    
-    const currentRole = profile?.role || 'user';
-    setRole(currentRole);
-
-    if (currentRole === 'admin') {
-      // ADMIN METRICS
-      setStats([
-        { label: "플랫폼 총 매출", value: "₩12.8M", change: "+12.5%", icon: TrendingUp, color: "from-indigo-600 to-violet-600" },
-        { label: "활성 구독 매장", value: "42", change: "+4개", icon: Users, color: "from-blue-500 to-indigo-600" },
-        { label: "AI 누적 생성량", value: "8.4k", change: "+148", icon: Sparkles, color: "from-amber-400 to-amber-600" },
-        { label: "시스템 인프라", value: "Optimal", change: "99.9%", icon: Activity, color: "from-emerald-500 to-teal-600" },
-      ]);
-      setLoading(false);
-      return;
-    }
-
-    // USER METRICS (Existing logic)
+    // USER METRICS
     const { count: campaignCount } = await supabase
       .from('campaigns')
       .select('*', { count: 'exact', head: true })
@@ -136,19 +113,11 @@ export default function DashboardPage() {
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className={cn(
-              "inline-flex items-center gap-2 px-4 py-2 rounded-full border",
-              role === 'admin' 
-                ? "bg-indigo-50 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/50" 
-                : "bg-rose-50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/50"
-            )}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-rose-50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/50"
           >
-            {role === 'admin' ? <Activity className="w-4 h-4 text-indigo-500" /> : <Sparkles className="w-4 h-4 text-rose-500" />}
-            <span className={cn(
-              "text-[10px] font-black uppercase tracking-widest leading-none",
-              role === 'admin' ? "text-indigo-500" : "text-rose-500"
-            )}>
-              {role === 'admin' ? "플랫폼 전체 인프라 정상" : "AI 마케팅 엔진 가동 중"}
+            <Sparkles className="w-4 h-4 text-rose-500" />
+            <span className="text-[10px] font-black uppercase tracking-widest leading-none text-rose-500">
+              전개 구역 인텔리전스 활성
             </span>
           </motion.div>
           <motion.h1 
@@ -156,7 +125,7 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-6xl font-black tracking-tighter uppercase italic leading-[0.9] text-zinc-900 dark:text-white"
           >
-            {role === 'admin' ? "운영 통합 사령부" : "중앙 사령부"}
+            중앙 사령부
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -164,28 +133,11 @@ export default function DashboardPage() {
             transition={{ delay: 0.2 }}
             className="text-zinc-500 font-medium max-w-xl text-lg leading-relaxed"
           >
-            {role === 'admin' 
-              ? "\"플랫폼 전체의 수익 모델과 글로벌 인프라 가동 상태를 실시간으로 통제하고 확장합니다.\""
-              : "\"물리적 한계를 초월하여, 잠자는 동안에도 가동되는 24/7 마케팅 로봇 시스템을 관리합니다.\""}
+            "물리적 한계를 초월하여, 잠자는 동안에도 가동되는 24/7 마케팅 로봇 시스템을 관리합니다."
           </motion.p>
         </div>
         
         <div className="flex items-center gap-4">
-          {role === 'admin' ? (
-            <>
-              <Link href="/admin/users">
-                <Button variant="outline" size="lg" className="border-indigo-200 dark:border-indigo-800 font-bold uppercase tracking-widest text-[10px]">
-                  구독 매장 심층 분석
-                </Button>
-              </Link>
-              <Link href="/admin/settings">
-                 <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white font-black italic shadow-xl shadow-indigo-600/20">
-                  <Zap className="w-5 h-5 mr-3 shrink-0" /> 인프라 자가 진단
-                </Button>
-              </Link>
-            </>
-          ) : (
-            <>
               <Button 
                 variant="outline" 
                 size="lg" 
@@ -201,8 +153,6 @@ export default function DashboardPage() {
                   <Sparkles className="w-5 h-5 mr-3 shrink-0" /> 신규 캠페인 런칭
                 </Button>
               </Link>
-            </>
-          )}
         </div>
       </div>
 
@@ -347,7 +297,7 @@ export default function DashboardPage() {
                 <div className="space-y-3">
                    <h4 className="text-2xl font-black tracking-tighter uppercase italic leading-none">주간 통찰 리포트</h4>
                    <p className="text-zinc-300 text-xs font-bold leading-relaxed">
-                     "이번 주는 '졸업식' 시즌 키워드에 130% 집중하세요. AI가 당신만의 스위트 스팟을 찾아냈습니다."
+                     "이번 주 트렌드 키워드에 130% 집중하세요. AI가 당신의 비즈니스에 최적화된 스위트 스팟을 찾아냈습니다."
                    </p>
                 </div>
                 <Button variant="outline" className="w-full bg-white/10 border-white/20 text-white hover:bg-white hover:text-indigo-950 font-black uppercase text-[10px] tracking-widest rounded-2xl py-6">전략 활성화</Button>

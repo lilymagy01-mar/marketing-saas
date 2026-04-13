@@ -13,16 +13,16 @@ import {
 export default function AdminDashboard() {
   // Mock data - In production this will come from Supabase Admin query
   const stats = [
-    { name: '전체 활성 꽃집', value: '8', change: '+2', changeType: 'increase', icon: Users },
-    { name: '프리미엄 구독', value: '3', change: '+1', changeType: 'increase', icon: Activity },
-    { name: 'n8n 노드 가동률', value: '99.9%', change: 'Normal', changeType: 'neutral', icon: Server },
-    { name: 'AI 평균 응답', value: '1.2s', change: '-0.2s', changeType: 'increase', icon: Zap },
+    { name: '전체 활성 태넌트', value: '42', change: '+12', changeType: 'increase', icon: Users },
+    { name: '유료 구독 매출', value: '₩12.8M', change: '+12.5%', changeType: 'increase', icon: Activity },
+    { name: 'n8n 시스템 가동률', value: '99.9%', change: 'Normal', changeType: 'neutral', icon: Server },
+    { name: 'AI 워크플로우 응답', value: '1.2s', change: '-0.2s', changeType: 'increase', icon: Zap },
   ];
 
   const recentUsers = [
-    { id: 1, name: '들꽃 인테리어', email: 'wildflower@example.com', plan: 'Premium', status: 'Active', date: '2024.04.12' },
-    { id: 2, name: '라라 플라워', email: 'lala@example.com', plan: 'Free', status: 'Active', date: '2024.04.11' },
-    { id: 3, name: '블룸가든', email: 'bloom@example.com', plan: 'Premium', status: 'Pending', date: '2024.04.10' },
+    { id: 1, name: '글로벌 패션 테크', email: 'fashion@example.com', plan: 'Premium', status: 'Active', date: '2024.04.12' },
+    { id: 2, name: '어반 커피 로스터리', email: 'coffee@example.com', plan: 'Free', status: 'Active', date: '2024.04.11' },
+    { id: 3, name: '마크 부동산 솔루션', email: 'estate@example.com', plan: 'Premium', status: 'Pending', date: '2024.04.10' },
   ];
 
   return (
@@ -54,7 +54,7 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-white flex items-center gap-3">
               <Users className="w-5 h-5 text-indigo-400" />
-              신규 입점 꽃집
+              신규 입점 비즈니스
             </h2>
             <button className="text-xs font-bold text-indigo-400 hover:text-indigo-300">전체 보기</button>
           </div>

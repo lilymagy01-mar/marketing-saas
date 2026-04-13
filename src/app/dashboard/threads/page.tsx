@@ -88,7 +88,7 @@ export default function ThreadsPage() {
            {country === 'CN' ? "위챗 모멘트 기폭제" : "쓰레드 기폭제"}
         </h1>
         <p className="text-zinc-500 font-medium max-w-xl text-lg leading-relaxed">
-           {country === 'CN' ? '"위챗 모멘트의 친구 기반 네트워크를 공략하여, 사장님의 매장 주변 VIP들의 취향 꽃집으로 자리매김합니다."' : '"사장님의 꽃이 MZ세대의 피드를 물들이도록, 감성 충만하고 매력적인 메시지를 창조합니다."'}
+           {country === 'CN' ? '"위챗 모멘트의 친구 기반 네트워크를 공략하여, 사장님의 비즈니스 주변 VIP들의 선호 브랜드로 자리매김합니다."' : '"사장님의 서비스가 MZ세대의 피드를 물들이도록, 감성 충만하고 매력적인 메시지를 창조합니다."'}
         </p>
         <div className="mt-4 flex items-center gap-4">
            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">타켓 전략</span>
@@ -113,7 +113,7 @@ export default function ThreadsPage() {
 
                <div className="space-y-4">
                  <textarea 
-                   placeholder="어떤 꽃이 어떤 분위기를 전하고 싶으신가요? (예: 화사한 봄꽃 배송 첫 구매, 졸업 축하 꽃다발)"
+                   placeholder="어떤 가치나 분위기를 전하고 싶으신가요? (예: 신제품 런칭 이벤트, 주말 깜짝 할인, 브랜드 스토리)"
                    value={prompt}
                    onChange={(e) => setPrompt(e.target.value)}
                    className="w-full h-40 bg-zinc-800 border border-zinc-700 rounded-[32px] p-8 text-lg focus:ring-4 focus:ring-violet-500/20 outline-none transition-all placeholder:text-zinc-600 font-bold resize-none"
@@ -222,8 +222,8 @@ export default function ThreadsPage() {
                     <div className="flex items-center gap-4 border-b border-zinc-100 dark:border-zinc-900 pb-8">
                        <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-rose-500/20">L</div>
                        <div className="flex-1">
-                          <h4 className="font-black text-lg italic uppercase tracking-tighter leading-none">Lilymag Florist</h4>
-                          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">@lilymag_official</p>
+                          <h4 className="font-black text-lg italic uppercase tracking-tighter leading-none">Your Business</h4>
+                          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">@business_official</p>
                        </div>
                        <Button variant="ghost" size="sm" className="rounded-full h-10 w-10 p-0 text-zinc-400">
                          <Plus className="w-6 h-6" />

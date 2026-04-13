@@ -39,7 +39,7 @@ export default function Home() {
           <div className="flex flex-col items-center text-center">
             <div className="mb-6 flex items-center gap-2 rounded-full border border-rose-100 bg-rose-50/50 px-4 py-1.5 text-sm font-semibold text-rose-600 dark:border-rose-900/50 dark:bg-rose-900/10 dark:text-rose-400">
               <Zap className="h-4 w-4" />
-              <span>Next-Gen Flower Shop Automation</span>
+              <span>Next-Gen Marketing SaaS Automation</span>
             </div>
             <h1 className="mb-8 max-w-4xl text-5xl font-extrabold tracking-tight lg:text-7xl leading-[1.1]">
               사장님이 잠든 사이에도 <br />
@@ -48,7 +48,7 @@ export default function Home() {
               </span>
             </h1>
             <p className="mb-12 max-w-2xl text-lg leading-relaxed text-zinc-500 dark:text-zinc-400 sm:text-xl">
-              전 세계 수백만 꽃집 사장님을 위한 완전 무인 마케팅 시스템. 
+              전 세계 수백만 비즈니스 사장님을 위한 완전 무인 마케팅 시스템. 
               AI가 영상을 만들고, 수치가 증명하며, 결제가 자동으로 이어지는 '더 시스템'의 시작.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row">
@@ -72,7 +72,7 @@ export default function Home() {
               { 
                 icon: <Rocket className="h-6 w-6 text-rose-500" />, 
                 title: "AI 무인 콘텐츠", 
-                desc: "사진 한 장으로 0.5초 만에 제작되는 프리미엄 쇼츠/릴스 영상." 
+                desc: "브랜드 자산으로 0.5초 만에 제작되는 프리미엄 마케팅 소재." 
               },
               { 
                 icon: <BarChart3 className="h-6 w-6 text-rose-500" />, 
@@ -82,7 +82,7 @@ export default function Home() {
               { 
                 icon: <Zap className="h-6 w-6 text-rose-500" />, 
                 title: "글로벌 상륙", 
-                desc: "수백만 매장이 동시에 사용해도 안정적인 무중단 아키텍처." 
+                desc: "수많은 비즈니스가 동시에 사용해도 안정적인 무중단 아키텍처." 
               }
             ].map((feature, i) => (
               <div key={i} className="group relative rounded-3xl border border-rose-50 bg-white/50 p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50">

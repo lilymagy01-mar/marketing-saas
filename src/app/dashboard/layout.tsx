@@ -66,18 +66,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [router]);
 
-  const allItems = [
-    { icon: LayoutDashboard, label: "대시보드 총괄", href: "/dashboard" },
-    { icon: Zap, label: "운영 사령부", href: "/admin", adminOnly: true, special: true },
-    { icon: ShieldCheck, label: "마케팅 검토실", href: "/dashboard/review" },
-    { icon: Store, label: "매장 프로필", href: "/dashboard/shop" },
+  const userItems = [
+    { icon: LayoutDashboard, label: "중앙 사령부", href: "/dashboard" },
+    { icon: Store, label: "비즈니스 프로필", href: "/dashboard/shop" },
     { icon: Video, label: "AI 쇼츠 제작", href: "/dashboard/shorts" },
     { icon: FileText, label: "블로그 자동화", href: "/dashboard/blog" },
     { icon: Hash, label: "스레드 봇", href: "/dashboard/threads" },
-    { icon: Settings, label: "시스템 설정", href: "/dashboard/settings" },
+    { icon: ShieldCheck, label: "마케팅 검토실", href: "/dashboard/review" },
+    { icon: Settings, label: "운영 설정", href: "/dashboard/settings" },
   ];
 
-  const menuItems = allItems.filter(item => !item.adminOnly || role === 'admin');
+  const adminItems = [
+    { icon: Zap, label: "플랫폼 총괄 제어", href: "/admin", special: true },
+    { icon: ShieldCheck, label: "글로벌 인프라", href: "/admin/settings" },
+  ];
 
   return (
     <div className="flex h-screen bg-[#fafafa] dark:bg-[#050505] text-zinc-900 dark:text-zinc-100 overflow-hidden font-sans">
@@ -115,44 +117,62 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           )}
         </div>
 
-        <nav className="flex-1 px-6 space-y-3 mt-8">
-          {menuItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link 
-                key={item.href} 
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 group relative",
-                  isActive 
-                    ? (item.special ? "bg-indigo-600 text-white shadow-xl shadow-indigo-600/30" : "bg-rose-500 text-white shadow-xl shadow-rose-500/20") 
-                    : item.special 
-                      ? "text-indigo-400 bg-indigo-500/5 border border-indigo-500/20 hover:bg-indigo-500/10"
-                      : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white",
-                  !isSidebarOpen && "justify-center px-0 w-14 h-14 mx-auto"
-                )}
-              >
-                <item.icon className={cn(
-                  "w-5 h-5 shrink-0", 
-                  isActive ? "text-white" : item.special ? "text-indigo-500" : "group-hover:scale-110 transition-transform"
-                )} />
-                {isSidebarOpen && (
-                  <span className="font-bold text-sm tracking-tight">
-                    {item.label}
-                  </span>
-                )}
-                {isActive && (
-                  <motion.div 
-                    layoutId="sidebar-active"
+        <nav className="flex-1 px-6 mt-8 space-y-8 overflow-y-auto custom-scrollbar">
+          {/* Admin Section */}
+          {role === 'admin' && (
+            <div className="space-y-3">
+              <span className="px-5 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-2 block">Platform Control</span>
+              {adminItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link 
+                    key={item.href} 
+                    href={item.href}
                     className={cn(
-                      "absolute inset-0 rounded-2xl -z-10",
-                      item.special ? "bg-indigo-600" : "bg-rose-500"
+                      "flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 group relative",
+                      isActive 
+                        ? "bg-indigo-600 text-white shadow-xl shadow-indigo-600/30" 
+                        : "text-indigo-400 bg-indigo-500/5 border border-indigo-500/20 hover:bg-indigo-500/10",
+                      !isSidebarOpen && "justify-center px-0 w-14 h-14 mx-auto"
                     )}
-                  />
-                )}
-              </Link>
-            );
-          })}
+                  >
+                    <item.icon className="w-5 h-5 shrink-0" />
+                    {isSidebarOpen && <span className="font-bold text-sm tracking-tight">{item.label}</span>}
+                  </Link>
+                );
+              })}
+              <div className="h-px bg-zinc-100 dark:bg-zinc-800 mx-5 my-6" />
+            </div>
+          )}
+
+          {/* User Section */}
+          <div className="space-y-3">
+             {role === 'admin' && isSidebarOpen && (
+               <span className="px-5 text-[10px] font-black text-rose-400 uppercase tracking-[0.2em] mb-2 block">Marketing Zone</span>
+             )}
+            {userItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link 
+                  key={item.href} 
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 group relative",
+                    isActive 
+                      ? "bg-rose-500 text-white shadow-xl shadow-rose-500/20" 
+                      : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white",
+                    !isSidebarOpen && "justify-center px-0 w-14 h-14 mx-auto"
+                  )}
+                >
+                  <item.icon className={cn(
+                    "w-5 h-5 shrink-0 transition-transform", 
+                    isActive ? "text-white" : "group-hover:scale-110"
+                  )} />
+                  {isSidebarOpen && <span className="font-bold text-sm tracking-tight">{item.label}</span>}
+                </Link>
+              );
+            })}
+          </div>
         </nav>
 
         <div className="p-6">

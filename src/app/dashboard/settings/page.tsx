@@ -38,8 +38,11 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState({
     shopName: "",
     persona: "Elegant & Premium",
+    industry: "flower",
     targetAudience: "",
+    brandVoice: "friendly",
     autoPilot: true,
+    isAdmin: false
   });
 
   const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
@@ -84,6 +87,22 @@ export default function SettingsPage() {
         setConnectedPlatforms(creds.map(c => c.provider));
       }
 
+      // Fetch profile & shop settings for deep context
+      const [{ data: shopData }, { data: profileData }] = await Promise.all([
+        supabase.from('shop_settings').select('*').eq('user_id', user.id).single(),
+        supabase.from('profiles').select('*').eq('id', user.id).single()
+      ]);
+
+      setSettings({
+        shopName: shopData?.shop_name || '',
+        persona: shopData?.store_persona || 'Elegant',
+        autoPilot: !!shopData?.auto_pilot_enabled,
+        industry: profileData?.industry || 'flower',
+        targetAudience: profileData?.target_audience || 'general customers',
+        brandVoice: profileData?.brand_voice || 'friendly',
+        isAdmin: !!profileData?.is_admin
+      });
+
       setIsLoading(false);
     }
 
@@ -107,17 +126,24 @@ export default function SettingsPage() {
     setIsSaving(true);
     
     try {
-      const { error } = await supabase
-        .from('shop_settings')
-        .upsert({
+      const [shopUpdate, profileUpdate] = await Promise.all([
+        supabase.from('shop_settings').upsert({
           user_id: userId,
           store_persona: settings.persona,
           auto_pilot_enabled: settings.autoPilot,
+          shop_name: settings.shopName,
           updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
-        });
-      if (error) throw error;
+        }, { onConflict: 'user_id' }),
+        supabase.from('profiles').update({
+          industry: settings.industry,
+          target_audience: settings.targetAudience,
+          brand_voice: settings.brandVoice,
+          is_admin: settings.isAdmin
+        }).eq('id', userId)
+      ]);
+
+      if (shopUpdate.error) throw shopUpdate.error;
+      if (profileUpdate.error) throw profileUpdate.error;
 
       setIsSaving(false);
       setIsSaved(true);
@@ -328,19 +354,48 @@ export default function SettingsPage() {
           </h3>
           <Card className="p-8 bg-white dark:bg-zinc-950 border-none shadow-2xl rounded-[40px] space-y-8">
              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3 block">지점 명칭</label>
+                    <input 
+                      type="text" 
+                      value={settings.shopName}
+                      onChange={(e) => setSettings({...settings, shopName: e.target.value})}
+                      placeholder="e.g. My Global Branch #1"
+                      className="w-full p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3 block">핵심 업종</label>
+                    <select 
+                      value={settings.industry}
+                      onChange={(e) => setSettings({...settings, industry: e.target.value})}
+                      className="w-full p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner appearance-none cursor-pointer"
+                    >
+                      <option value="flower">🌸 프리미엄 꽃집</option>
+                      <option value="saas">🚀 IT/SaaS 솔루션</option>
+                      <option value="cafe">☕ 카페/디저트</option>
+                      <option value="restaurant">🍱 일반 음식점</option>
+                      <option value="fashion">👗 패션/뷰티</option>
+                      <option value="realestate">🏠 부동산/자산관리</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div>
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3 block">지점 명칭</label>
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3 block">주 타겟 고객</label>
                   <input 
                     type="text" 
-                    value={settings.shopName}
-                    onChange={(e) => setSettings({...settings, shopName: e.target.value})}
-                    placeholder="e.g. My Global Branch #1"
+                    value={settings.targetAudience}
+                    onChange={(e) => setSettings({...settings, targetAudience: e.target.value})}
+                    placeholder="예: 2030 직장인 여성, 자영업자 사장님 등"
                     className="w-full p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner"
                   />
                 </div>
+
                 <div>
                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3 block">브랜드 페르소나 (톤)</label>
-                   <div className="grid grid-cols-2 gap-2">
+                   <div className="grid grid-cols-4 gap-2">
                      {[
                        { id: 'Elegant', label: '우아함' },
                        { id: 'Warm', label: '따뜻함' },
@@ -350,12 +405,30 @@ export default function SettingsPage() {
                        <button 
                          key={p.id} 
                          onClick={() => setSettings({...settings, persona: p.id})}
-                         className={`p-3 rounded-xl border ${settings.persona.includes(p.id) ? 'border-indigo-500 bg-indigo-500/5 text-indigo-500' : 'border-zinc-100 dark:border-zinc-800 text-zinc-400'} text-[10px] font-black uppercase tracking-tighter transition-all`}
+                         className={`p-3 rounded-xl border ${settings.persona.includes(p.id) ? 'border-indigo-500 bg-indigo-500/5 text-indigo-500 shadow-lg shadow-indigo-500/10' : 'border-zinc-100 dark:border-zinc-800 text-zinc-400'} text-[10px] font-black uppercase tracking-tighter transition-all hover:scale-105 active:scale-95`}
                        >
                          {p.label}
                        </button>
                      ))}
                    </div>
+                </div>
+
+                <div className="pt-4">
+                  <div className="flex items-center justify-between p-6 bg-zinc-50 dark:bg-zinc-900 rounded-[32px] border border-zinc-100 dark:border-zinc-800">
+                    <div className="space-y-1">
+                       <h4 className="font-black text-xs uppercase italic tracking-tighter text-zinc-900 dark:text-white">시스템 총괄 모드 (Admin)</h4>
+                       <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">플랫폼 B2B 마케팅 모드 활성화</p>
+                    </div>
+                    <button 
+                      onClick={() => setSettings({...settings, isAdmin: !settings.isAdmin})}
+                      className={cn(
+                        "w-12 h-6 rounded-full p-1 transition-all",
+                        settings.isAdmin ? "bg-indigo-600" : "bg-zinc-200 dark:bg-zinc-800"
+                      )}
+                    >
+                       <div className={cn("w-4 h-4 bg-white rounded-full transition-all", settings.isAdmin ? "translate-x-6" : "translate-x-0")} />
+                    </button>
+                  </div>
                 </div>
              </div>
           </Card>
@@ -382,9 +455,9 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="pt-2">
-                   <p className="text-[10px] text-zinc-400 font-bold leading-relaxed px-2">
-                     * 활성화 시 AI가 매장의 감성을 분석하여 정기적인 자동 마케팅 작전을 수행합니다. 모든 설정은 중앙 사령부(Admin)의 정책을 따릅니다.
-                   </p>
+                    <p className="text-[10px] text-zinc-400 font-bold leading-relaxed px-2">
+                      * 활성화 시 AI가 비즈니스의 특성을 분석하여 정기적인 자동 마케팅 작전을 수행합니다. 모든 설정은 중앙 사령부(Admin)의 정책을 따릅니다.
+                    </p>
                 </div>
              </div>
           </Card>

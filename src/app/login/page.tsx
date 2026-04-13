@@ -14,68 +14,84 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
-
-const Button = ({ children, className, onClick, disabled, variant = "primary" }: any) => {
-  const baseStyle = "flex items-center justify-center transition-all active:scale-95 disabled:opacity-50";
-  const variants: any = {
-    primary: "bg-white text-black hover:bg-zinc-100",
-    outline: "border border-white/10 bg-white/5 hover:bg-white/10 text-zinc-400",
-    rose: "bg-rose-600 text-white hover:bg-rose-500 shadow-xl shadow-rose-600/20"
-  };
-  return (
-    <button onClick={onClick} disabled={disabled} className={`${baseStyle} ${variants[variant]} ${className}`}>
-      {children}
-    </button>
-  );
-};
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [step, setStep] = useState(1); // 1: Auth, 2: Identity Setup
-
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      const password = (e.target as any).querySelector('input[type="password"]').value;
-      
+      console.log("[Auth] Attempting", isSignUp ? "SignUp" : "SignIn", "for", email);
+
       if (isSignUp) {
         const { data, error } = await supabase.auth.signUp({
           email,
           password
         });
         if (error) throw error;
-        alert("회원가입이 완료되었습니다! 로그인을 시도해 주세요.");
+        alert("회원가입이 완료되었습니다! 획득하신 계정으로 바로 로그인이 가능합니다.");
         setIsSignUp(false);
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
         });
-        if (error) throw error;
+        
+        if (error) {
+          console.error("[Auth] Login Error:", error);
+          if (error.message.includes("Email not confirmed")) {
+            alert("이메일 인증이 필요합니다. 메일함을 확인해 주세요.");
+          } else if (error.message.includes("Invalid login credentials")) {
+            alert("이메일 또는 비밀번호가 올바르지 않습니다.");
+          } else {
+            alert(`로그인 오류: ${error.message}`);
+          }
+          throw error;
+        }
 
-        // Check if user already has a display_name (onboarding done)
-        const { data: profile } = await supabase
+        console.log("[Auth] Session created for:", data.user?.email);
+
+        // Fetch profile
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('display_name')
-          .eq('id', (data.user as any).id)
+          .select('display_name, is_admin')
+          .eq('id', data.user.id)
           .single();
 
+        if (profileError) {
+           console.warn("[Auth] Profile fetch error:", profileError);
+        }
+
+        // Logic: Admin goes to /admin, Regular user with shop goes to /dashboard, Others to step 2
+        if (profile?.is_admin === true) {
+          console.log("[Auth] Redirecting to Admin");
+          router.push("/admin");
+          return;
+        }
+
         if (profile?.display_name) {
+          console.log("[Auth] Redirecting to Dashboard");
           router.push("/dashboard");
           return;
         }
         
+        console.log("[Auth] Moving to Identity Setup (Step 2)");
         setStep(2);
       }
-
-      setIsLoading(false);
     } catch (err: any) {
-      alert(`오류 발생: ${err.message}`);
+      console.error("[Auth] Exception:", err);
+      // alert already handled above for specific cases
+    } finally {
       setIsLoading(false);
     }
   };
@@ -98,16 +114,22 @@ export default function LoginPage() {
     const shopName = shopNameInput?.value || 'LilyMag Shop';
 
     setIsLoading(true);
-    // Save shop name to database
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await supabase
-        .from('profiles')
-        .update({ display_name: shopName })
-        .eq('id', user.id);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ 
+            display_name: shopName,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+      }
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("[Onboarding] Error:", err);
+      router.push("/dashboard"); // Fallback
     }
-
-    router.push("/dashboard");
   };
 
   return (
@@ -145,6 +167,7 @@ export default function LoginPage() {
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 transition-colors group-focus-within:text-rose-500" />
                     <input 
                       type="email" 
+                      name="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -156,7 +179,10 @@ export default function LoginPage() {
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 transition-colors group-focus-within:text-rose-500" />
                     <input 
                       type="password" 
+                      name="password"
                       required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                       className="w-full bg-white/5 border border-white/10 p-5 pl-12 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500/50 transition-all font-bold text-sm"
                     />
@@ -164,11 +190,15 @@ export default function LoginPage() {
                 </div>
 
                 <Button 
+                  type="submit"
                   disabled={isLoading}
-                  className="w-full py-7 rounded-2xl font-black uppercase tracking-widest text-[10px]"
+                  className={cn(
+                    "w-full py-8 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all",
+                    isSignUp ? "bg-rose-600 hover:bg-rose-500" : "bg-white text-black hover:bg-zinc-200"
+                  )}
                 >
                   {isLoading ? (
-                    <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     <>{isSignUp ? 'Create Account' : 'Initialize Portal'} <ArrowRight className="ml-2 w-4 h-4" /></>
                   )}
@@ -196,14 +226,14 @@ export default function LoginPage() {
               <div className="grid grid-cols-2 gap-4">
                 <Button 
                   variant="outline" 
-                  className="py-6 rounded-2xl font-bold text-[10px] uppercase"
+                  className="py-6 rounded-2xl font-bold text-[10px] uppercase border-white/10 bg-white/5 text-zinc-400"
                   onClick={() => handleOAuthSignIn('google')}
                 >
                    Google
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="py-6 rounded-2xl font-bold text-[10px] uppercase"
+                  className="py-6 rounded-2xl font-bold text-[10px] uppercase border-white/10 bg-white/5 text-zinc-400"
                   onClick={() => handleOAuthSignIn('github')}
                 >
                    Github
@@ -229,7 +259,7 @@ export default function LoginPage() {
               </div>
               <h2 className="text-5xl font-black tracking-tighter uppercase italic leading-none">Welcome to <br/> <span className="text-rose-500">The System</span></h2>
               <p className="text-zinc-400 font-medium max-w-[340px] mx-auto leading-relaxed">
-                "이제 사장님만의 고유 식별 번호가 생성되었습니다. 이 번호로 전 세계 SNS와 사장님의 꽃집을 1:1로 매칭합니다."
+                "이제 사장님만의 고유 식별 번호가 생성되었습니다. 이 번호로 전 세계 SNS와 사장님의 비즈니스를 1:1로 매칭합니다."
               </p>
             </div>
 
@@ -260,8 +290,7 @@ export default function LoginPage() {
 
               <Button 
                 onClick={handleStartJourney}
-                variant="rose"
-                className="w-full py-8 rounded-3xl font-black uppercase tracking-widest text-xs"
+                className="w-full py-10 rounded-3xl font-black uppercase tracking-widest text-xs bg-rose-600 hover:bg-rose-500 text-white shadow-2xl shadow-rose-600/20"
               >
                 Launch Global Engine <ArrowRight className="ml-2 w-5 h-5" />
               </Button>

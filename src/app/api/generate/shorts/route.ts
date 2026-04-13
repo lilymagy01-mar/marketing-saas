@@ -16,17 +16,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch user persona for Brand DNA Injection
+    // Fetch contextual metadata
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('target_audience, is_admin')
+      .eq('id', user?.id)
+      .single();
+
     const { data: shopSettings } = await supabase
       .from('shop_settings')
-      .select('store_persona')
+      .select('store_persona, industry_id, marketing_theme')
       .eq('user_id', user?.id)
       .single();
 
     const storePersona = normalizePersona(shopSettings?.store_persona);
 
     // AI Generation
-    const scenario = await generateShortsScenario(prompt, country || 'KR', storePersona);
+    const scenario = await generateShortsScenario(
+      prompt, 
+      country || 'KR', 
+      storePersona,
+      shopSettings?.industry_id || 'flower',
+      profile?.target_audience || 'general customers',
+      profile?.is_admin || false,
+      shopSettings?.marketing_theme
+    );
 
     // If user is logged in, save to campaigns table automatically
     if (user) {

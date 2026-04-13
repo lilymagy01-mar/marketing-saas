@@ -112,7 +112,7 @@ export default function BlogPage() {
             
             <div className="space-y-4">
               <textarea 
-                placeholder="예: 졸업식 꽃다발 추천, 장미의 꽃말, 화이트데이 선물"
+                placeholder="예: 신상품 출시 소식, 업종별 시장 트렌드, 브랜드 스토리"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 className="w-full h-32 bg-zinc-900 border border-zinc-800 rounded-[24px] p-6 text-sm focus:ring-2 focus:ring-amber-500/40 outline-none transition-all placeholder:text-zinc-700 font-bold resize-none"
@@ -247,13 +247,13 @@ export default function BlogPage() {
                           </div>
                        </div>
 
-                       <div className="flex flex-wrap gap-3">
-                         {["#꽃집마케팅", "#졸업식꽃다발", "#꽃말이야기", "#SaaS"].map(tag => (
-                           <span key={tag} className="px-4 py-2 bg-zinc-50 dark:bg-zinc-900 rounded-xl text-xs font-bold text-zinc-500">
-                             {tag}
-                           </span>
-                         ))}
-                       </div>
+                        <div className="flex flex-wrap gap-3">
+                          {["#브랜딩", "#마케팅전략", "#트렌드", "#SaaS"].map(tag => (
+                            <span key={tag} className="px-4 py-2 bg-zinc-50 dark:bg-zinc-900 rounded-xl text-xs font-bold text-zinc-500">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                     </div>
                     <div className="absolute -bottom-20 -right-20 p-20 opacity-[0.02] group-hover:scale-110 transition-transform duration-[3000ms]">
                        <Target className="w-96 h-96" />

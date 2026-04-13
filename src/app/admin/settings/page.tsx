@@ -21,7 +21,7 @@ export default function AdminSettings() {
           </div>
           <div>
             <h2 className="text-xl font-bold text-white">중앙 인프라 브리지 설정</h2>
-            <p className="text-slate-500 text-sm">모든 테넌트(꽃집)에 적용될 전역 자동화 허브를 설정합니다.</p>
+            <p className="text-slate-500 text-sm">모든 테넌트(비즈니스 상점)에 적용될 전역 자동화 허브를 설정합니다.</p>
           </div>
         </div>
 

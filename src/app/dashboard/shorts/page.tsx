@@ -47,7 +47,7 @@ export default function ShortsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          prompt: prompt || "A beautiful flower bouquet for a graduation ceremony.",
+          prompt: prompt || "A professional business promotion video scenario.",
           country 
         }),
       });
@@ -102,7 +102,7 @@ export default function ShortsPage() {
            {country === 'CN' ? "도우인 바이럴 합성" : "AI 쇼츠 합성 엔진"}
         </h1>
         <p className="text-zinc-500 font-medium max-w-xl text-lg leading-relaxed">
-           "단 한 장의 꽃 사진으로, 수만 명의 시선을 사로잡는 하이엔드 바이럴 영상을 창조합니다."
+           "단 한 장의 사진으로, 전 세계 수만 명의 시선을 사로잡는 하이엔드 바이럴 영상을 창조합니다."
         </p>
         <div className="mt-4 flex items-center gap-4">
            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">타겟 전략 리전</span>
@@ -155,7 +155,7 @@ export default function ShortsPage() {
                 <div className="mt-6 w-full max-w-xs mx-auto">
                     <input 
                         type="text" 
-                        placeholder="짧은 설명을 적어주세요 (예: 빨간 장미 졸업 꽃다발)"
+                        placeholder="짧은 설명을 적어주세요 (예: 신메뉴 출시, 시즌 세일 홍보)"
                         onChange={(e) => setPrompt(e.target.value)}
                         className="w-full bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-rose-500/40 outline-none transition-all placeholder:text-zinc-600 font-bold"
                     />
@@ -207,7 +207,7 @@ export default function ShortsPage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                       <div className="absolute bottom-8 left-8 right-8 space-y-3">
                          <div className="px-4 py-1.5 bg-rose-500 text-white text-[10px] font-black w-fit rounded-full uppercase tracking-widest shadow-xl">템플릿 0{i}</div>
-                         <h4 className="text-white text-xl font-bold italic uppercase tracking-tighter">어반 플로라 v4</h4>
+                         <h4 className="text-white text-xl font-bold italic uppercase tracking-tighter">바이럴 부스트 v4</h4>
                       </div>
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                          <div className="w-20 h-20 bg-white/20 backdrop-blur-xl border border-white/30 rounded-full flex items-center justify-center shadow-2xl">

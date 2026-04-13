@@ -36,7 +36,7 @@ export default function AdminLayout({
           </Link>
           <Link href="/admin/users" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white transition-all">
             <Users className="w-5 h-5" />
-            <span className="font-medium">구독 꽃집 관리</span>
+            <span className="font-medium">테넌트 비즈니스 관리</span>
           </Link>
           <Link href="/admin/subscriptions" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white transition-all">
             <CreditCard className="w-5 h-5" />
@@ -74,7 +74,7 @@ export default function AdminLayout({
         <header className="flex justify-between items-center mb-10">
           <div>
             <h1 className="text-2xl font-bold text-white mb-1">시스템 중앙 사령부</h1>
-            <p className="text-slate-400 text-sm">전체 꽃집 구독 현황 및 인프라 상태를 실시간 모니터링합니다.</p>
+            <p className="text-slate-400 text-sm">전체 테넌트 구독 현황 및 인프라 상태를 실시간 모니터링합니다.</p>
           </div>
           <div className="flex gap-4">
             <button className="p-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all relative">

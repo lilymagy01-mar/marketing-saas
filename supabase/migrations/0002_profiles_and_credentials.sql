@@ -88,12 +88,18 @@ CREATE INDEX IF NOT EXISTS idx_user_credentials_user_id ON public.user_credentia
 CREATE INDEX IF NOT EXISTS idx_user_credentials_provider ON public.user_credentials(user_id, provider);
 CREATE INDEX IF NOT EXISTS idx_shop_settings_user_id ON public.shop_settings(user_id);
 
--- 9. 신규 유저 가입 시 자동 profile 생성 트리거
+-- 9. 신규 유저 가입 시 자동 profile & shop_settings 생성 트리거
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
+    -- 1. 프로필 생성
     INSERT INTO public.profiles (id, display_name)
     VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email));
+    
+    -- 2. 기본 매장 설정 생성 (신규 유저 필수 - 대시보드 충돌 방지)
+    INSERT INTO public.shop_settings (user_id, industry_id, marketing_theme)
+    VALUES (NEW.id, 'SAAS', 'Modern & Professional');
+    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

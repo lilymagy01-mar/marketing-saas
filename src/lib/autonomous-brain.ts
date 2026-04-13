@@ -28,7 +28,7 @@ async function runResearcherAgent(supabase: any, userId: string, region: string)
     user_id: userId,
     agent_name: 'Researcher',
     action_type: 'Analysis',
-    thought_process: `[트렌드 분석] 현재 ${region} 시장의 검색량 데이터와 리전별 시즌(4월) 키워드를 교차 분석한 결과, '${pickedTopic}' 주제가 가장 높은 도달률을 기록할 것으로 예측됩니다.`,
+    thought_process: `[트렌드 분석] 현재 ${region} 시장의 검색량 데이터와 리전별 시즌 키워드를 교차 분석한 결과, '${pickedTopic}' 주제가 비즈니스 성장에 가장 유리한 파동을 형성할 것으로 예측됩니다.`,
     metadata: { topic: pickedTopic, confidence: 0.94 }
   });
 
@@ -39,7 +39,7 @@ async function runResearcherAgent(supabase: any, userId: string, region: string)
  * 🤖 [Creative Agent]
  * 선정된 주제를 바탕으로 사장님의 브랜드 페르소나를 주입(Injection)하여 고품질 콘텐츠를 생성합니다.
  */
-async function runCreativeAgent(supabase: any, userId: string, topic: string, contentType: 'shorts' | 'blog', storePersona: string) {
+async function runCreativeAgent(supabase: any, userId: string, topic: string, contentType: 'shorts' | 'blog', storePersona: string, industryId: string, marketingTheme: string) {
   // AI 엔진의 정규화 유틸리티를 사용하여 브랜드 DNA 추출
   const normalizedPersona = normalizePersona(storePersona);
 
@@ -52,9 +52,9 @@ async function runCreativeAgent(supabase: any, userId: string, topic: string, co
 
   let content;
   if (contentType === 'shorts') {
-    content = await generateShortsScenario(topic, 'KR', normalizedPersona);
+    content = await generateShortsScenario(topic, 'KR', normalizedPersona, industryId, 'general customers', false, marketingTheme);
   } else {
-    content = await generateMarketingCopy(topic, 'blog', 'KR', normalizedPersona);
+    content = await generateMarketingCopy(topic, 'blog', 'KR', normalizedPersona, industryId, 'general customers', false, marketingTheme);
   }
 
   return content;
@@ -121,7 +121,7 @@ export async function runGlobalAutonomousEngine() {
   
   const { data: shops, error: shopsError } = await supabase
     .from('shop_settings')
-    .select('user_id, n8n_webhook_url, store_persona, target_platforms')
+    .select('user_id, n8n_webhook_url, store_persona, target_platforms, industry_id, marketing_theme')
     .eq('auto_pilot_enabled', true);
 
   if (shopsError || !shops) {
@@ -147,7 +147,15 @@ export async function runGlobalAutonomousEngine() {
 
       // 2. Creative phase (Brand DNA Injection happens here)
       const contentType = Math.random() > 0.5 ? 'shorts' : 'blog';
-      const content = await runCreativeAgent(supabase, shop.user_id, topic, contentType, shop.store_persona);
+      const content = await runCreativeAgent(
+        supabase, 
+        shop.user_id, 
+        topic, 
+        contentType, 
+        shop.store_persona, 
+        shop.industry_id || 'flower', 
+        shop.marketing_theme || ''
+      );
 
       // 3. Publishing phase
       await runPublisherAgent(supabase, shop.user_id, topic, contentType, content, shop.n8n_webhook_url);
