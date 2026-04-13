@@ -68,12 +68,13 @@ export default function SettingsPage() {
         .single();
 
       if (shopSettings) {
-        setSettings({
-          shopName: shopSettings.store_persona || "", // Overloading for now
+        setSettings(prev => ({
+          ...prev,
+          shopName: shopSettings.store_persona || "", 
           persona: shopSettings.store_persona || "Elegant & Premium",
           targetAudience: "", 
-          autoPilot: shopSettings.auto_pilot_enabled,
-        });
+          autoPilot: !!shopSettings.auto_pilot_enabled,
+        }));
       }
 
       // Fetch Connected Platforms
@@ -93,15 +94,16 @@ export default function SettingsPage() {
         supabase.from('profiles').select('*').eq('id', user.id).single()
       ]);
 
-      setSettings({
+      setSettings(prev => ({
+        ...prev,
         shopName: shopData?.shop_name || '',
         persona: shopData?.store_persona || 'Elegant',
         autoPilot: !!shopData?.auto_pilot_enabled,
         industry: profileData?.industry || 'flower',
         targetAudience: profileData?.target_audience || 'general customers',
         brandVoice: profileData?.brand_voice || 'friendly',
-        isAdmin: !!profileData?.is_admin
-      });
+        isAdmin: profileData?.role === 'admin'
+      }));
 
       setIsLoading(false);
     }
