@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { 
   LayoutDashboard, 
@@ -10,12 +12,28 @@ import {
   LogOut,
   Bell
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email || "Admin");
+    });
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-white font-sans selection:bg-indigo-500/30">
       {/* Side Navigation - Command Center Style */}
@@ -57,13 +75,18 @@ export default function AdminLayout({
 
         <div className="absolute bottom-4 left-4 right-4 p-4 rounded-2xl bg-gradient-to-t from-slate-900 to-slate-800/50 border border-white/5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-slate-700 border border-white/10 overflow-hidden" />
-            <div>
-              <p className="text-xs font-bold text-white">Super Admin</p>
-              <p className="text-[10px] text-slate-500">System Operator</p>
+            <div className="w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center font-bold text-indigo-400 text-xs">
+              {userEmail?.[0].toUpperCase() || 'A'}
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-[10px] font-bold text-white truncate">{userEmail}</p>
+              <p className="text-[9px] text-slate-500">System Operator</p>
             </div>
           </div>
-          <button className="w-full py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
+          <button 
+            onClick={handleLogout}
+            className="w-full py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
             <LogOut className="w-3 h-3" /> 안전하게 나가기
           </button>
         </div>

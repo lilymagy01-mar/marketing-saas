@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { 
   Zap, 
   ShieldCheck, 
@@ -7,10 +9,77 @@ import {
   Lock,
   RefreshCcw,
   Save,
-  Cpu
+  Cpu,
+  Loader2
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminSettings() {
+  const [config, setConfig] = useState<any>({
+    n8n_master_url: '',
+    openai_master_key: ''
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    async function fetchConfig() {
+      try {
+        const { data, error } = await supabase
+          .from('platform_config')
+          .select('*');
+        
+        // platform_config 테이블이 없으면 조용히 무시
+        if (error && error.code !== 'PGRST205') {
+          console.warn('platform_config load skipped:', error.message);
+        }
+
+        if (data) {
+          const newConfig = { ...config };
+          data.forEach(item => {
+            if (item.key === 'n8n_master_url') newConfig.n8n_master_url = item.value?.url || '';
+            if (item.key === 'openai_master_key') newConfig.openai_master_key = item.value?.key || '';
+          });
+          setConfig(newConfig);
+        }
+      } catch (err) {
+        // silently ignore - table may not exist yet
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchConfig();
+  }, []);
+
+  const handleSave = async (key: string, value: any) => {
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('platform_config')
+        .upsert({ 
+          key, 
+          value: key === 'n8n_master_url' ? { url: value } : { key: value },
+          updated_at: new Date().toISOString()
+        });
+
+      if (error && error.code === 'PGRST205') {
+        alert('⚠️ platform_config 테이블이 아직 없습니다.\nSupabase SQL Editor에서 마이그레이션을 먼저 실행해주세요.');
+        return;
+      }
+      if (error) throw error;
+      alert("✅ 설정이 저장되었습니다.");
+    } catch (err) {
+      console.error("Save failed:", err);
+      alert("저장에 실패했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center p-20 text-slate-500">설정 불러오는 중...</div>;
+  }
+
   return (
     <div className="max-w-4xl space-y-8">
       {/* 🔮 Central Infrastructure Vault */}
@@ -34,10 +103,15 @@ export default function AdminSettings() {
               <input 
                 type="text" 
                 className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500/50 outline-none transition-all"
-                defaultValue="https://n8n.lilymag.ai/webhook/master-marketing-engine"
+                value={config.n8n_master_url}
+                onChange={(e) => setConfig({...config, n8n_master_url: e.target.value})}
               />
-              <button className="px-4 py-3 bg-white/5 hover:bg-indigo-500/20 text-indigo-400 border border-white/10 rounded-xl transition-all flex items-center gap-2 font-bold text-xs">
-                <RefreshCcw className="w-4 h-4" /> 연결 테스트
+              <button 
+                onClick={() => handleSave('n8n_master_url', config.n8n_master_url)}
+                disabled={isSaving}
+                className="px-4 py-3 bg-white/5 hover:bg-indigo-500/20 text-indigo-400 border border-white/10 rounded-xl transition-all flex items-center gap-2 font-bold text-xs"
+              >
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 저장
               </button>
             </div>
           </div>
@@ -50,10 +124,15 @@ export default function AdminSettings() {
               <input 
                 type="password" 
                 className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500/50 outline-none transition-all font-mono"
-                defaultValue="sk-proj-••••••••••••••••••••••••••••••••••••••••"
+                value={config.openai_master_key}
+                onChange={(e) => setConfig({...config, openai_master_key: e.target.value})}
               />
-              <button className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl transition-all flex items-center gap-2 font-bold text-xs shadow-lg shadow-indigo-500/20">
-                <Save className="w-4 h-4" /> 저장
+              <button 
+                onClick={() => handleSave('openai_master_key', config.openai_master_key)}
+                disabled={isSaving}
+                className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl transition-all flex items-center gap-2 font-bold text-xs shadow-lg shadow-indigo-500/20"
+              >
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 마스터 키 저장
               </button>
             </div>
           </div>
@@ -120,3 +199,4 @@ export default function AdminSettings() {
     </div>
   );
 }
+

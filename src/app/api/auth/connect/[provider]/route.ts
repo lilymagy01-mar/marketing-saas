@@ -19,7 +19,7 @@ export async function GET(
   if (provider === 'instagram') {
     const clientId = process.env.NEXT_PUBLIC_META_APP_ID || '';
     const scope = 'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement';
-    authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&state=${userId}`;
+    authUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&state=${userId}&auth_type=reauthenticate`;
   } 
   else if (provider === 'youtube') {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';

@@ -14,7 +14,8 @@ import {
   Camera,
   Map,
   Clock,
-  Aperture
+  Aperture,
+  Wand2
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,9 @@ export default function ShopPage() {
   const [industry, setIndustry] = useState<IndustryType>('SAAS');
   const [shopName, setShopName] = useState("V4 Digital HQ");
   const [marketingTheme, setMarketingTheme] = useState("권위와 신뢰 중심의 프리미엄 마케팅");
+  const [targetAudience, setTargetAudience] = useState("");
+  const [oneliner, setOneliner] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [industryMap, setIndustryMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -63,6 +67,7 @@ export default function ShopPage() {
         setIndustry(settings.industries.code as IndustryType);
       }
       setMarketingTheme(settings.marketing_theme || "");
+      setTargetAudience(settings.target_audience || "");
     }
 
     // 3. Fetch shop name from shops table or profile
@@ -87,6 +92,7 @@ export default function ShopPage() {
         .update({
           industry_id: industryId,
           marketing_theme: marketingTheme,
+          target_audience: targetAudience,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
@@ -102,6 +108,31 @@ export default function ShopPage() {
       console.error("Save failed:", error);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleZeroSetting() {
+    if (!oneliner.trim()) return;
+    setIsAnalyzing(true);
+    try {
+      const res = await fetch("/api/automation/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oneliner }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.shopName) setShopName(data.shopName);
+        if (data.industryCode && industryMap[data.industryCode]) {
+          setIndustry(data.industryCode as IndustryType);
+        }
+        if (data.marketingTheme) setMarketingTheme(data.marketingTheme);
+        if (data.targetAudience) setTargetAudience(data.targetAudience);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAnalyzing(false);
     }
   }
 
@@ -161,6 +192,35 @@ export default function ShopPage() {
                <div className="absolute inset-0 bg-white/10 backdrop-blur-3xl" />
              </div>
              <div className="p-12 -mt-24 relative z-10 space-y-10">
+                {/* Zero-Setting Component */}
+                <div className="bg-white dark:bg-zinc-900 rounded-[32px] p-8 shadow-xl ring-1 ring-zinc-100 dark:ring-zinc-800 space-y-4 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-indigo-500 to-rose-500" />
+                  <div className="flex items-center gap-3 mb-2">
+                    <Wand2 className="w-6 h-6 text-indigo-500" />
+                    <h4 className="text-xl font-black uppercase italic tracking-tighter">제로 세팅 AI (Zero-Setting)</h4>
+                  </div>
+                  <p className="text-zinc-500 font-bold text-sm">
+                    아래에 비즈니스를 단 한 줄로 설명해주세요. AI가 모든 마케팅 프로필을 자동으로 분석하여 세팅합니다.
+                  </p>
+                  <div className="flex gap-4">
+                    <input 
+                      value={oneliner}
+                      onChange={(e) => setOneliner(e.target.value)}
+                      placeholder="예) 강남역 파티룸 스타일의 고급 와인바이고, 2030 직장인이 주 타겟이야."
+                      className="flex-1 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-2xl px-6 py-4 font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleZeroSetting(); }}
+                    />
+                    <Button 
+                      onClick={handleZeroSetting} 
+                      disabled={isAnalyzing || !oneliner.trim()}
+                      className="rounded-2xl px-8 h-auto bg-indigo-500 hover:bg-indigo-600 font-bold text-lg"
+                    >
+                      {isAnalyzing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Sparkles className="w-5 h-5 mr-2" />}
+                      {isAnalyzing ? "분석 중..." : "AI 자동 세팅"}
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="flex flex-col md:flex-row items-end gap-8">
                   <div className="w-40 h-40 rounded-[48px] bg-white dark:bg-zinc-900 shadow-2xl p-2 ring-1 ring-zinc-100 dark:ring-zinc-800">
                     <div className="w-full h-full rounded-[40px] bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-white text-5xl font-black italic shadow-inner">
@@ -184,6 +244,16 @@ export default function ShopPage() {
                         onChange={(e) => setMarketingTheme(e.target.value)}
                         placeholder="예: 현대적인 미니멀리즘, 감성적인 꽃 이야기 등"
                         className="text-xl font-bold tracking-tight text-zinc-500 bg-transparent border-b border-zinc-200 dark:border-zinc-800 outline-none focus:border-rose-500 transition-all w-full pb-2"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">타겟 고객층</p>
+                      <input 
+                        value={targetAudience}
+                        onChange={(e) => setTargetAudience(e.target.value)}
+                        placeholder="예: 30대 남성 기념일 선물"
+                        className="text-lg font-bold tracking-tight text-zinc-600 dark:text-zinc-400 bg-transparent border-b border-zinc-200 dark:border-zinc-800 outline-none focus:border-rose-500 transition-all w-full pb-2"
                       />
                     </div>
 

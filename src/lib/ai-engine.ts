@@ -80,15 +80,38 @@ export async function generateShortsScenario(
   
   if (process.env.OPENAI_API_KEY === undefined || process.env.OPENAI_API_KEY === "mock-key") {
     const platform = country === 'CN' ? "Douyin" : "YouTube Shorts";
-    return {
-      hook: `[${country} - ${platform} - ${storePersona}] 시선을 훔치는 3초의 마찰!`,
-      value: `${persona.name} 전략과 ${storePersona} 감성이 결합된 ${platform} 최적화 가치 정보...`,
-      cta: `지금 바로 ${country === 'CN' ? "상단 고정 댓글" : "프로필 링크"}를 확인하세요!`,
-      script: `[Script for ${platform}] 안녕하세요, ${persona.tone}와 ${storeTone}을 반영한 바이럴 대본입니다...`,
-      estimatedReachBoost: "130%+",
-      country: country,
-      platforms: persona.platforms
-    };
+    return [
+      {
+        type: 'Dominance',
+        hook: `[${country} - ${platform} - ${storePersona}] 오직 상위 1%를 위한 시선을 훔치는 3초!`,
+        value: `${persona.name} 전략과 ${storePersona} 감성이 결합된 프리미엄 정보...`,
+        cta: `지금 바로 VIP 혜택을 확인하세요!`,
+        script: `[Script] 압도적인 퀄리티, 남들과는 다른 선택...`,
+        estimatedReachBoost: "150%+",
+        country: country,
+        platforms: persona.platforms
+      },
+      {
+        type: 'Stimulus',
+        hook: `[${country}] 안 보면 무조건 후회하는 트렌디 끝판왕!`,
+        value: `가장 트렌디한 ${storePersona} 스타일의 파격적인 구성...`,
+        cta: `품절 전 프로필 링크 클릭!`,
+        script: `[Script] 힙한 공간엔 무조건 이거죠!...`,
+        estimatedReachBoost: "180%+",
+        country: country,
+        platforms: persona.platforms
+      },
+      {
+        type: 'Balance',
+        hook: `[${country}] 변치 않는 마음을 전하는 가장 진정성 있는 3초`,
+        value: `30년 장인의 마음으로 준비한 믿을 수 있는 품질...`,
+        cta: `고민 없이 안심하고 예약하세요.`,
+        script: `[Script] 언제나 믿고 찾는 ${storePersona}의 감동...`,
+        estimatedReachBoost: "120%+",
+        country: country,
+        platforms: persona.platforms
+      }
+    ];
   }
 
   const systemPrompt = isAdmin 
@@ -104,18 +127,44 @@ export async function generateShortsScenario(
        Target Market: ${country}. Exclusive Platforms: ${persona.platforms.join(", ")}.
        Strategy: ${persona.strategy}.`;
 
-  const finalSystemPrompt = systemPrompt + `\nOutput JSON format: { "hook": string, "value": string, "cta": string, "script": string, "estimatedReachBoost": string }`;
+  const finalSystemPrompt = systemPrompt + `
+  You must output exactly 3 variations of the scenario based on the 'Limbic Map' psychological triggers to perform A/B/C testing:
+  1. 'Dominance' (지배): Focus on status, exclusivity, premium feeling, and being the best (1%).
+  2. 'Stimulus' (자극): Focus on novelty, trends, fun, excitement, and breaking the mold.
+  3. 'Balance' (균형): Focus on trust, comfort, tradition, reliability, and warm emotions.
+  
+  Format the output as a JSON object containing a "variants" array:
+  {
+    "variants": [
+      {
+        "type": "Dominance",
+        "hook": "string",
+        "value": "string",
+        "cta": "string",
+        "script": "string",
+        "estimatedReachBoost": "150%+"
+      },
+      ...
+    ]
+  }
+  Do not include markdown blocks, just raw JSON.`;
 
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
       { role: "system", content: finalSystemPrompt },
-      { role: "user", content: `Create a viral content scenario for: ${prompt}. Language: ${country}.` }
+      { role: "user", content: `Create a viral content scenario for: ${prompt}. Language: ${country}. Make sure the output is pure JSON matching the requested structure.` }
     ],
     response_format: { type: "json_object" },
   });
 
-  return JSON.parse(response.choices[0].message.content || "{}");
+  const parsed = JSON.parse(response.choices[0].message.content || "{}");
+  const variants = parsed.variants || [parsed]; // fallback
+  return variants.map((v: any) => ({
+    ...v,
+    country,
+    platforms: persona.platforms
+  }));
 }
 
 export async function generateMarketingCopy(

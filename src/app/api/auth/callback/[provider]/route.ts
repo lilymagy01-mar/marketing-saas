@@ -187,10 +187,15 @@ export async function GET(
     // TODO: 실제 배포 시 @supabase/ssr 의 createServerClient로 교체 필요
     const tokenExpiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
 
-    // user_id는 state 파라미터나 세션에서 가져와야 함
-    // 임시: state에서 user_id를 전달하는 방식
-    const state = searchParams.get('state');
-    let userId = state; // connect API에서 state에 user_id를 넣어 전달
+    // ✅ 토큰 탈취 방지: state 파라미터를 맹신하지 않고 보안 세션에서 직접 유저 추출
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      console.error('[Secured Auth Error] 유효하지 않은 세션', authError);
+      return NextResponse.redirect(new URL(`/dashboard/settings?error=unauthorized_callback`, request.url));
+    }
+    
+    let userId = user.id;
 
     if (userId) {
       const { error: upsertError } = await supabase

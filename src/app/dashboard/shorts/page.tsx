@@ -30,9 +30,11 @@ export default function ShortsPage() {
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [prompt, setPrompt] = useState("");
-  const [scenario, setScenario] = useState<any>(null);
+  const [scenarios, setScenarios] = useState<any[] | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<number>(0);
   const [country, setCountry] = useState<CountryCode>('KR');
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isRendering, setIsRendering] = useState(false);
 
   const steps = [
     { id: 1, label: "에셋 입력", icon: Upload },
@@ -52,7 +54,8 @@ export default function ShortsPage() {
         }),
       });
       const data = await response.json();
-      setScenario(data);
+      setScenarios(Array.isArray(data) ? data : [data]);
+      setSelectedVariant(0); // Reset to first variant
       // Wait a bit to show the animation
       setTimeout(() => {
         setIsGenerating(false);
@@ -65,7 +68,8 @@ export default function ShortsPage() {
   };
 
   const handlePublish = async () => {
-    if (!scenario) return;
+    if (!scenarios || scenarios.length === 0) return;
+    const scenario = scenarios[selectedVariant];
     setIsPublishing(true);
     try {
       const platform = country === 'CN' ? 'Douyin' : 'YouTube Shorts';
@@ -87,6 +91,28 @@ export default function ShortsPage() {
     } catch (error) {
       console.error("Publish failed", error);
       setIsPublishing(false);
+    }
+  };
+
+  const handleRenderVideo = async () => {
+    if (!scenarios || scenarios.length === 0) return;
+    setIsRendering(true);
+    try {
+      const response = await fetch("/api/generate/video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenario: scenarios[selectedVariant] }),
+      });
+      const data = await response.json();
+      if (data.videoUrl) {
+        const updated = [...scenarios];
+        updated[selectedVariant] = { ...updated[selectedVariant], videoUrl: data.videoUrl };
+        setScenarios(updated);
+      }
+    } catch (error) {
+      console.error("Video synthesis failed", error);
+    } finally {
+      setIsRendering(false);
     }
   };
 
@@ -262,7 +288,7 @@ export default function ShortsPage() {
           </motion.div>
         )}
 
-        {step === 4 && scenario && (
+        {step === 4 && scenarios && scenarios.length > 0 && (
             <motion.div 
                 key="step4"
                 initial={{ opacity: 0, y: 30 }}
@@ -271,62 +297,109 @@ export default function ShortsPage() {
             >
                 {/* Result Preview */}
                 <div className="relative group overflow-hidden rounded-[48px] border-none shadow-2xl aspect-[9/16] bg-zinc-900">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="relative">
-                            <div className="absolute -inset-10 bg-rose-500/20 blur-[60px] animate-pulse" />
-                            <Play className="w-24 h-24 text-white fill-white relative z-10" />
-                        </div>
-                    </div>
+                    {scenarios[selectedVariant].videoUrl ? (
+                      <video 
+                        src={scenarios[selectedVariant].videoUrl} 
+                        autoPlay 
+                        loop 
+                        muted 
+                        className="absolute inset-0 w-full h-full object-cover" 
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    )}
+                    
+                    {!scenarios[selectedVariant].videoUrl && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="relative">
+                              <div className="absolute -inset-10 bg-rose-500/20 blur-[60px] animate-pulse" />
+                              <Play className="w-24 h-24 text-white fill-white relative z-10" />
+                          </div>
+                      </div>
+                    )}
+                    
                     <div className="absolute bottom-12 left-12 right-12 space-y-6">
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500 text-white border border-rose-400/50 w-fit">
                             <Sparkles className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">AI 마스터피스</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest">
+                              AI 림빅 맵: {scenarios[selectedVariant].type || 'Variation'}
+                            </span>
                         </div>
-                        <h2 className="text-4xl font-extrabold text-white leading-tight italic uppercase tracking-tighter uppercase italic">{scenario.hook}</h2>
-                        <div className="flex gap-4">
-                            <Button variant="glass" size="lg" className="flex-1">
-                                <Download className="w-5 h-5 mr-3" /> {country === 'CN' ? "도우인용 저장" : "모바일용 저장"}
-                            </Button>
+                        <h2 className="text-4xl font-extrabold text-white leading-tight italic uppercase tracking-tighter uppercase italic">{scenarios[selectedVariant].hook}</h2>
+                        
+                        <div className="flex flex-col gap-4">
                             <Button 
                                 variant="glass" 
                                 size="lg" 
-                                className="flex-1"
-                                onClick={handlePublish}
-                                disabled={isPublishing}
+                                className="w-full bg-indigo-500/80 hover:bg-indigo-600/80 text-white"
+                                onClick={handleRenderVideo}
+                                disabled={isRendering}
                             >
-                                <Share2 className={cn("w-5 h-5 mr-3", isPublishing && "animate-spin")} /> 
-                                {isPublishing ? "배포 중..." : (country === 'CN' ? "도우인 자동 업로드" : "실시간 자동 배포")}
+                                <Video className={cn("w-5 h-5 mr-3", isRendering && "animate-spin")} /> 
+                                {isRendering ? "뉴럴 렌더링 중..." : (scenarios[selectedVariant].videoUrl ? "비디오 재생성" : "🎬 MP4 영상 구워내기")}
                             </Button>
+                            <div className="flex gap-4">
+                                <Button variant="glass" size="lg" className="flex-1">
+                                    <Download className="w-5 h-5 mr-3" /> 모바일 저장
+                                </Button>
+                                <Button 
+                                    variant="glass" 
+                                    size="lg" 
+                                    className="flex-1 bg-rose-500/80 hover:bg-rose-600/80"
+                                    onClick={handlePublish}
+                                    disabled={isPublishing || !scenarios[selectedVariant].videoUrl}
+                                >
+                                    <Share2 className={cn("w-5 h-5 mr-3", isPublishing && "animate-spin")} /> 
+                                    {isPublishing ? "배포 중..." : "실시간 배포"}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Scenario Details */}
                 <div className="space-y-8">
-                    <Card className="bg-gradient-to-tr from-zinc-900 to-black text-white border-none p-10 rounded-[48px] overflow-hidden relative group">
+                    {/* Limbic Map Variant Selector */}
+                    <Card className="bg-white dark:bg-zinc-900 p-2 border-zinc-100 dark:border-zinc-800 rounded-full flex gap-2 overflow-x-auto shadow-sm">
+                      {scenarios.map((variant, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setSelectedVariant(idx)}
+                          className={cn(
+                            "flex-1 px-4 py-3 rounded-full text-xs font-black tracking-widest uppercase transition-all duration-300",
+                            selectedVariant === idx 
+                              ? "bg-rose-500 text-white shadow-lg" 
+                              : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500"
+                          )}
+                        >
+                          {variant.type === 'Dominance' ? '👑 지배 (과시/권위)' : variant.type === 'Stimulus' ? '🔥 자극 (유행/파격)' : '🌿 균형 (신뢰/안정)'}
+                        </button>
+                      ))}
+                    </Card>
+
+                    <Card className="bg-gradient-to-tr from-zinc-900 to-black text-white border-none p-10 rounded-[40px] overflow-hidden relative group">
                         <div className="relative z-10 space-y-8">
                             <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-green-500 text-white font-black text-xs uppercase tracking-widest">
-                                <TrendingUp className="w-4 h-4" /> 잠재 도달률: {scenario.estimatedReachBoost}
+                                <TrendingUp className="w-4 h-4" /> 잠재 도달률: {scenarios[selectedVariant].estimatedReachBoost}
                             </div>
                             <div className="space-y-2">
                                 <h3 className="text-4xl font-black italic tracking-tighter uppercase text-amber-400">쇼츠 시나리오</h3>
                                 <p className="text-zinc-400 text-sm font-medium leading-relaxed italic tracking-tighter">
-                                    "{scenario.script}"
+                                    "{scenarios[selectedVariant].script}"
                                 </p>
                             </div>
                             <div className="space-y-6 pt-6 border-t border-white/10">
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">바이럴 훅 (Hook)</p>
-                                    <p className="font-bold text-lg">{scenario.hook}</p>
+                                    <p className="font-bold text-lg">{scenarios[selectedVariant].hook}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">정서적 가치 (Value)</p>
-                                    <p className="font-medium text-zinc-300 text-sm">{scenario.value}</p>
+                                    <p className="font-medium text-zinc-300 text-sm">{scenarios[selectedVariant].value}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">직접 행동 유도 (CTA)</p>
-                                    <p className="font-black text-rose-400 text-sm">{scenario.cta}</p>
+                                    <p className="font-black text-rose-400 text-sm">{scenarios[selectedVariant].cta}</p>
                                 </div>
                             </div>
                             <Button onClick={() => setStep(3)} variant="outline" className="w-full border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white">

@@ -27,9 +27,9 @@ import { cn } from "@/lib/utils";
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState([
-    { label: "총 도달수", value: "1.2M", change: "+0%", icon: Users, color: "from-rose-500 to-rose-600" },
-    { label: "AI 생성 콘텐츠", value: "0", change: "New", icon: Sparkles, color: "from-amber-400 to-amber-600" },
-    { label: "전환율", value: "4.8%", change: "+0%", icon: TrendingUp, color: "from-indigo-500 to-indigo-600" },
+    { label: "AI 생성 콘텐츠", value: "0", change: "-", icon: Sparkles, color: "from-amber-400 to-amber-600" },
+    { label: "배포된 캠페인", value: "0", change: "-", icon: Share2, color: "from-indigo-500 to-indigo-600" },
+    { label: "구독 플랜", value: "...", change: "Status", icon: Users, color: "from-rose-500 to-rose-600" },
     { label: "자율 주행 모드", value: "OFF", change: "-", icon: Zap, color: "from-emerald-500 to-emerald-600" },
   ]);
 
@@ -50,9 +50,21 @@ export default function DashboardPage() {
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
+    const { count: publishedCount } = await supabase
+      .from('campaigns')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('status', 'published');
+
     const { data: shopSettings } = await supabase
       .from('shop_settings')
       .select('auto_pilot_enabled')
+      .eq('user_id', user.id)
+      .single();
+
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('plan, status')
       .eq('user_id', user.id)
       .single();
 
@@ -64,10 +76,10 @@ export default function DashboardPage() {
       .limit(3);
 
     setStats([
-      { label: "총 도달수", value: "1.2M", change: "+12.5%", icon: Users, color: "from-rose-500 to-rose-600" },
-      { label: "AI 생성 콘텐츠", value: (campaignCount || 0).toString(), change: "+42%", icon: Sparkles, color: "from-amber-400 to-amber-600" },
-      { label: "전환율", value: "4.8%", change: "+1.2%", icon: TrendingUp, color: "from-indigo-500 to-indigo-600" },
-      { label: "자율 주행 모드", value: shopSettings?.auto_pilot_enabled ? "가동중" : "중지됨", change: "시스템 정상", icon: Zap, color: "from-emerald-500 to-emerald-600" },
+      { label: "AI 생성 콘텐츠", value: (campaignCount || 0).toString(), change: "Total", icon: Sparkles, color: "from-amber-400 to-amber-600" },
+      { label: "배포된 캠페인", value: (publishedCount || 0).toString(), change: "Published", icon: Share2, color: "from-indigo-500 to-indigo-600" },
+      { label: "구독 플랜", value: subscription?.plan || "Free", change: subscription?.status === 'active' ? "Active" : "Expired", icon: Users, color: "from-rose-500 to-rose-600" },
+      { label: "자율 주행 모드", value: shopSettings?.auto_pilot_enabled ? "가동중" : "중지됨", change: "System", icon: Zap, color: "from-emerald-500 to-emerald-600" },
     ]);
 
     if (campaigns) setRecentCampaigns(campaigns);
