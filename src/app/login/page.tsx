@@ -64,7 +64,7 @@ export default function LoginPage() {
         // Fetch profile
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('display_name, is_admin')
+          .select('display_name, role')
           .eq('id', data.user.id)
           .single();
 
@@ -73,7 +73,7 @@ export default function LoginPage() {
         }
 
         // Logic: Admin goes to /admin, Regular user with shop goes to /dashboard, Others to step 2
-        if (profile?.is_admin === true) {
+        if (profile?.role === 'admin') {
           console.log("[Auth] Redirecting to Admin");
           router.push("/admin");
           return;

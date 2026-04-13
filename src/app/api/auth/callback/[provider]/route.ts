@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase';
+import { getPlatformConfig } from '@/lib/platform-config';
 
 export async function GET(
   request: Request,
@@ -31,8 +32,12 @@ export async function GET(
     // 1. Provider별 Token Exchange
     // =========================================
     if (provider === 'instagram') {
-      const clientId = process.env.NEXT_PUBLIC_META_APP_ID || '';
-      const clientSecret = process.env.META_APP_SECRET || '';
+      const config = await getPlatformConfig('auth_meta', {
+        id: process.env.NEXT_PUBLIC_META_APP_ID,
+        secret: process.env.META_APP_SECRET
+      });
+      const clientId = config?.id || '';
+      const clientSecret = config?.secret || '';
 
       const response = await fetch(
         `https://graph.facebook.com/v19.0/oauth/access_token?client_id=${clientId}&redirect_uri=${redirectUri}&client_secret=${clientSecret}&code=${code}`
@@ -47,8 +52,12 @@ export async function GET(
       expiresIn = data.expires_in || 5184000; // 기본 60일
     } 
     else if (provider === 'youtube') {
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
-      const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
+      const config = await getPlatformConfig('auth_google', {
+        id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        secret: process.env.GOOGLE_CLIENT_SECRET
+      });
+      const clientId = config?.id || '';
+      const clientSecret = config?.secret || '';
 
       const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -72,8 +81,12 @@ export async function GET(
       expiresIn = data.expires_in || 3600;
     }
     else if (provider === 'naver') {
-      const clientId = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID || '';
-      const clientSecret = process.env.NAVER_CLIENT_SECRET || '';
+      const config = await getPlatformConfig('auth_naver', {
+        id: process.env.NEXT_PUBLIC_NAVER_CLIENT_ID,
+        secret: process.env.NAVER_CLIENT_SECRET
+      });
+      const clientId = config?.id || '';
+      const clientSecret = config?.secret || '';
 
       const response = await fetch('https://nid.naver.com/oauth2.0/token', {
         method: 'POST',
@@ -97,8 +110,12 @@ export async function GET(
       expiresIn = parseInt(data.expires_in) || 3600;
     }
     else if (provider === 'tiktok') {
-      const clientKey = process.env.TIKTOK_CLIENT_KEY || '';
-      const clientSecret = process.env.TIKTOK_CLIENT_SECRET || '';
+      const config = await getPlatformConfig('auth_tiktok', {
+        key: process.env.TIKTOK_CLIENT_KEY,
+        secret: process.env.TIKTOK_CLIENT_SECRET
+      });
+      const clientKey = config?.key || '';
+      const clientSecret = config?.secret || '';
 
       const response = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
         method: 'POST',
@@ -122,8 +139,12 @@ export async function GET(
       expiresIn = data.expires_in || 3600;
     }
     else if (provider === 'twitter') {
-      const clientId = process.env.TWITTER_CLIENT_ID || '';
-      const clientSecret = process.env.TWITTER_CLIENT_SECRET || '';
+      const config = await getPlatformConfig('auth_twitter', {
+        id: process.env.TWITTER_CLIENT_ID,
+        secret: process.env.TWITTER_CLIENT_SECRET
+      });
+      const clientId = config?.id || '';
+      const clientSecret = config?.secret || '';
 
       const response = await fetch('https://api.twitter.com/2/oauth2/token', {
         method: 'POST',
@@ -135,7 +156,7 @@ export async function GET(
           code,
           grant_type: 'authorization_code',
           redirect_uri: redirectUri,
-          code_verifier: 'challenge', // state에서 보낸 값과 매칭 필요
+          code_verifier: 'challenge',
         }),
       });
       const data = await response.json();
@@ -149,8 +170,12 @@ export async function GET(
       expiresIn = data.expires_in || 7200;
     }
     else if (provider === 'blogger') {
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
-      const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
+      const config = await getPlatformConfig('auth_google', {
+        id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        secret: process.env.GOOGLE_CLIENT_SECRET
+      });
+      const clientId = config?.id || '';
+      const clientSecret = config?.secret || '';
 
       const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -179,15 +204,9 @@ export async function GET(
 
     // =========================================
     // 2. 토큰을 Supabase DB에 안전하게 저장
-    // ⚠️ 더 이상 URL 파라미터로 토큰을 전달하지 않음!
     // =========================================
     const supabase = createServerSupabaseClient();
-    
-    // 현재 인증된 사용자 가져오기 (쿠키 기반 세션이 없으면 임시 처리)
-    // TODO: 실제 배포 시 @supabase/ssr 의 createServerClient로 교체 필요
     const tokenExpiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
-
-    // ✅ 토큰 탈취 방지: state 파라미터를 맹신하지 않고 보안 세션에서 직접 유저 추출
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -215,16 +234,11 @@ export async function GET(
 
       if (upsertError) {
         console.error('[DB Save Error]', upsertError);
-        // DB 저장 실패해도 연결은 성공으로 처리 (로그만 남김)
       }
     }
 
     console.log(`[LilyMag Auth] ${provider} 토큰 저장 완료`);
-
-    // ✅ 토큰 없이 성공 상태만 전달
-    return NextResponse.redirect(
-      new URL(`/dashboard/settings?success=${provider}`, request.url)
-    );
+    return NextResponse.redirect(new URL(`/dashboard/settings?success=${provider}`, request.url));
 
   } catch (err) {
     console.error(`[${provider} Exchange Error]`, err);
